@@ -13,11 +13,14 @@ type Row = {
   nome_prestazione_azienda: string
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { what_id: string } }) {
-  const { what_id } = params
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ what_id: string }> } // 👈 qui
+) {
+  const { what_id } = await ctx.params // 👈 e qui
+
   const patch = (await req.json()) as Partial<Pick<Row, "prezzo" | "in_vendita">>
 
-  // validazioni base
   if ("in_vendita" in patch && patch.in_vendita !== "SI" && patch.in_vendita !== "NO") {
     return NextResponse.json({ error: "Invalid in_vendita" }, { status: 400 })
   }
@@ -38,7 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { what_id: s
 
   rows[idx] = { ...rows[idx], ...patch }
 
-  // riscrive il file “pretty”
   await writeFile(filePath, JSON.stringify(rows, null, 2) + "\n", "utf8")
 
   return NextResponse.json(rows[idx])
