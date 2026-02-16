@@ -60,7 +60,7 @@ export function AppSidebar() {
         <Link href='/'>
           <Button>
             <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
+            Log Out
           </Button>
         </Link>
       </SidebarFooter>
