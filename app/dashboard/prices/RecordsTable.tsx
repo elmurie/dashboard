@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { RecordRow, getColumns } from "./columns"
 
@@ -75,64 +76,50 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getFacetedUniqueValues: getFacetedUniqueValues(),
     })
 
-    function toggleFilterValue(column: Column<RecordRow, unknown>, value: unknown) {
-        const current = (column.getFilterValue() as unknown[] | undefined) ?? []
-        const exists = current.some((item) => item === value)
-        const next = exists ? current.filter((item) => item !== value) : [...current, value]
-        column.setFilterValue(next.length ? next : undefined)
-    }
+    function renderColumnFilter(column: Column<RecordRow>) {
+        const value = (column.getFilterValue() as string) ?? ""
 
-    function renderColumnFilter(column: Column<RecordRow, unknown>) {
-        const uniqueValues = Array.from(column.getFacetedUniqueValues().keys())
-        if (!uniqueValues.length) return null
+        if (column.id === "in_vendita") {
+            return (
+                <Select
+                    value={value || "all"}
+                    onValueChange={(next) => column.setFilterValue(next === "all" ? "" : next)}
+                >
+                    <SelectTrigger className="h-8 w-full min-w-[120px]">
+                        <SelectValue placeholder="Tutti" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tutti</SelectItem>
+                        <SelectItem value="SI">SI</SelectItem>
+                        <SelectItem value="NO">NO</SelectItem>
+                    </SelectContent>
+                </Select>
+            )
+        }
 
-        const selected = ((column.getFilterValue() as unknown[] | undefined) ?? [])
+        if (column.id === "prezzo") {
+            return (
+                <Input
+                    placeholder=">= 70"
+                    value={value}
+                    onChange={(e) => column.setFilterValue(e.target.value)}
+                    className="h-8 min-w-[100px]"
+                />
+            )
+        }
 
-        return (
-            <details className="relative">
-                <summary className="cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted">
-                    Filtro {selected.length ? `(${selected.length})` : ""}
-                </summary>
+        if (["sede", "medico", "nome_prestazione", "codice_azienda", "nome_prestazione_azienda"].includes(column.id)) {
+            return (
+                <Input
+                    placeholder="Filtra..."
+                    value={value}
+                    onChange={(e) => column.setFilterValue(e.target.value)}
+                    className="h-8 min-w-[120px]"
+                />
+            )
+        }
 
-                <div className="absolute z-20 mt-1 w-56 rounded-md border bg-background p-2 shadow">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => column.setFilterValue(undefined)}
-                        >
-                            Tutti
-                        </Button>
-                        <span className="text-[11px] text-muted-foreground">
-                            {uniqueValues.length} valori
-                        </span>
-                    </div>
-
-                    <div className="max-h-56 space-y-1 overflow-auto pr-1">
-                        {uniqueValues
-                            .sort((a, b) => String(a).localeCompare(String(b), "it", { numeric: true }))
-                            .map((value, idx) => {
-                                const checked = selected.some((item) => item === value)
-                                const id = `${column.id}-${idx}-${String(value)}`
-
-                                return (
-                                    <label key={id} htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-muted">
-                                        <input
-                                            id={id}
-                                            type="checkbox"
-                                            checked={checked}
-                                            onChange={() => toggleFilterValue(column, value)}
-                                        />
-                                        <span className="truncate">{String(value)}</span>
-                                    </label>
-                                )
-                            })}
-                    </div>
-                </div>
-            </details>
-        )
+        return null
     }
 
     return (
@@ -145,15 +132,17 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                     className="sm:max-w-md"
                 />
 
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        setGlobalFilter("")
-                        setColumnFilters([])
-                    }}
-                >
-                    Reset
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            setGlobalFilter("")
+                            setColumnFilters([])
+                        }}
+                    >
+                        Reset
+                    </Button>
+                </div>
             </div>
 
             <div className="rounded-md border">
