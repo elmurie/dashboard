@@ -2,8 +2,11 @@
 
 import * as React from "react"
 import {
+    Column,
     ColumnFiltersState,
     getCoreRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
@@ -34,6 +37,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
     const columns = React.useMemo(() => getColumns(updateRecord), [])
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data,
         columns,
@@ -46,7 +50,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
             const q = String(filterValue ?? "").toLowerCase().trim()
             if (!q) return true
 
-            // ricerca “umana” su campi chiave
             const r = row.original
             const hay = [
                 r.sede,
@@ -68,7 +71,69 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
     })
+
+    function toggleFilterValue(column: Column<RecordRow, unknown>, value: unknown) {
+        const current = (column.getFilterValue() as unknown[] | undefined) ?? []
+        const exists = current.some((item) => item === value)
+        const next = exists ? current.filter((item) => item !== value) : [...current, value]
+        column.setFilterValue(next.length ? next : undefined)
+    }
+
+    function renderColumnFilter(column: Column<RecordRow, unknown>) {
+        const uniqueValues = Array.from(column.getFacetedUniqueValues().keys())
+        if (!uniqueValues.length) return null
+
+        const selected = ((column.getFilterValue() as unknown[] | undefined) ?? [])
+
+        return (
+            <details className="relative">
+                <summary className="cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted">
+                    Filtro {selected.length ? `(${selected.length})` : ""}
+                </summary>
+
+                <div className="absolute z-20 mt-1 w-56 rounded-md border bg-background p-2 shadow">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => column.setFilterValue(undefined)}
+                        >
+                            Tutti
+                        </Button>
+                        <span className="text-[11px] text-muted-foreground">
+                            {uniqueValues.length} valori
+                        </span>
+                    </div>
+
+                    <div className="max-h-56 space-y-1 overflow-auto pr-1">
+                        {uniqueValues
+                            .sort((a, b) => String(a).localeCompare(String(b), "it", { numeric: true }))
+                            .map((value, idx) => {
+                                const checked = selected.some((item) => item === value)
+                                const id = `${column.id}-${idx}-${String(value)}`
+
+                                return (
+                                    <label key={id} htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-muted">
+                                        <input
+                                            id={id}
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => toggleFilterValue(column, value)}
+                                        />
+                                        <span className="truncate">{String(value)}</span>
+                                    </label>
+                                )
+                            })}
+                    </div>
+                </div>
+            </details>
+        )
+    }
 
     return (
         <div className="space-y-3">
@@ -80,31 +145,15 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                     className="sm:max-w-md"
                 />
 
-                <div className="flex gap-2">
-                    <Input
-                        placeholder='Filtro prezzo es: ">= 70"'
-                        value={(table.getColumn("prezzo")?.getFilterValue() as string) ?? ""}
-                        onChange={(e) => table.getColumn("prezzo")?.setFilterValue(e.target.value)}
-                        className="w-[180px]"
-                    />
-
-                    <Input
-                        placeholder='In vendita: "SI" o "NO"'
-                        value={(table.getColumn("in_vendita")?.getFilterValue() as string) ?? ""}
-                        onChange={(e) => table.getColumn("in_vendita")?.setFilterValue(e.target.value.toUpperCase())}
-                        className="w-[150px]"
-                    />
-
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setGlobalFilter("")
-                            setColumnFilters([])
-                        }}
-                    >
-                        Reset
-                    </Button>
-                </div>
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setGlobalFilter("")
+                        setColumnFilters([])
+                    }}
+                >
+                    Reset
+                </Button>
             </div>
 
             <div className="rounded-md border">
@@ -117,6 +166,16 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(header.column.columnDef.header, header.getContext())}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
+
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={`${headerGroup.id}-filters`}>
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={`${header.id}-filter`}>
+                                        {header.isPlaceholder ? null : renderColumnFilter(header.column)}
                                     </TableHead>
                                 ))}
                             </TableRow>
