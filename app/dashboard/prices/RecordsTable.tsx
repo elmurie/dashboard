@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { RecordRow, getColumns } from "./columns"
 
@@ -31,6 +32,8 @@ async function updateRecord(what_id: string, patch: Partial<Pick<RecordRow, "pre
 }
 
 export function RecordsTable({ data }: { data: RecordRow[] }) {
+    const pageSizeOptions = [25, 50, 100]
+
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [globalFilter, setGlobalFilter] = React.useState("")
@@ -73,7 +76,28 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getPaginationRowModel: getPaginationRowModel(),
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
+        initialState: {
+            pagination: {
+                pageSize: pageSizeOptions[0],
+            },
+        },
     })
+
+    const pagination = table.getState().pagination
+    const pageCount = table.getPageCount()
+
+    const pageButtons = React.useMemo(() => {
+        if (pageCount <= 7) {
+            return Array.from({ length: pageCount }, (_, i) => i)
+        }
+
+        const current = pagination.pageIndex
+        const pages = new Set<number>([0, pageCount - 1, current, current - 1, current + 1])
+
+        return Array.from(pages)
+            .filter((p) => p >= 0 && p < pageCount)
+            .sort((a, b) => a - b)
+    }, [pageCount, pagination.pageIndex])
 
     function toggleFilterValue(column: Column<RecordRow, unknown>, value: unknown) {
         const current = (column.getFilterValue() as unknown[] | undefined) ?? []
@@ -204,15 +228,54 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-muted-foreground">
                     {table.getFilteredRowModel().rows.length} record
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Righe per pagina</span>
+                        <Select
+                            value={String(pagination.pageSize)}
+                            onValueChange={(value) => table.setPageSize(Number(value))}
+                        >
+                            <SelectTrigger className="h-8 w-[90px]" size="sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {pageSizeOptions.map((size) => (
+                                    <SelectItem key={size} value={String(size)}>
+                                        {size}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
                         Prev
                     </Button>
+
+                    {pageButtons.map((pageIndex, idx) => {
+                        const previous = pageButtons[idx - 1]
+                        const showDots = previous !== undefined && pageIndex - previous > 1
+
+                        return (
+                            <React.Fragment key={`page-${pageIndex}`}>
+                                {showDots ? <span className="px-1 text-sm text-muted-foreground">…</span> : null}
+                                <Button
+                                    variant={pagination.pageIndex === pageIndex ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => table.setPageIndex(pageIndex)}
+                                    className="min-w-8"
+                                >
+                                    {pageIndex + 1}
+                                </Button>
+                            </React.Fragment>
+                        )
+                    })}
+
                     <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
                         Next
                     </Button>
