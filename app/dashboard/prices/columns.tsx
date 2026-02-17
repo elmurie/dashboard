@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, FilterFn } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
     Select,
