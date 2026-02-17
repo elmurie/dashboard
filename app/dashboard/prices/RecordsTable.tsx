@@ -5,6 +5,8 @@ import {
     Column,
     ColumnFiltersState,
     getCoreRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
@@ -49,7 +51,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
             const q = String(filterValue ?? "").toLowerCase().trim()
             if (!q) return true
 
-            // ricerca “umana” su campi chiave
             const r = row.original
             const hay = [
                 r.sede,
@@ -71,6 +72,8 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
     })
 
     function renderColumnFilter(column: Column<RecordRow>) {

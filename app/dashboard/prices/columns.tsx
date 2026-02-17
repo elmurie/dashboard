@@ -24,6 +24,12 @@ export type RecordRow = {
 
 type UpdateFn = (what_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
 
+const multiSelectFilter: FilterFn<RecordRow> = (row, id, value) => {
+    if (!Array.isArray(value) || value.length === 0) return true
+    const cellValue = row.getValue(id)
+    return value.some((selected) => selected === cellValue)
+}
+
 function normalizePriceInput(value: string): number | null {
     // accetta "70", "70.5", "70,5"
     const cleaned = value.trim().replace(",", ".")
@@ -44,11 +50,11 @@ function validatePrice(n: number): { ok: true } | { ok: false; reason: string } 
 
 export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
-        { accessorKey: "sede", header: "Sede" },
-        { accessorKey: "medico", header: "Medico" },
-        { accessorKey: "nome_prestazione", header: "Prestazione" },
-        { accessorKey: "codice_azienda", header: "Codice" },
-        { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)" },
+        { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
+        { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
+        { accessorKey: "nome_prestazione", header: "Prestazione", filterFn: multiSelectFilter },
+        { accessorKey: "codice_azienda", header: "Codice", filterFn: multiSelectFilter },
+        { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
 
         {
             accessorKey: "in_vendita",
@@ -64,10 +70,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                     }}
                 />
             },
-            filterFn: (row, id, value) => {
-                if (!value) return true
-                return row.getValue(id) === value
-            },
+            filterFn: multiSelectFilter,
         },
 
         {
@@ -85,24 +88,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                     />
                 )
             },
-            filterFn: (row, id, value) => {
-                // filtro semplice: ">= 50", "<= 100", "70"
-                const n = Number(row.getValue(id))
-                const s = String(value ?? "").trim()
-                if (!s) return true
-
-                const m = s.match(/^(>=|<=|>|<)\s*(\d+(\.\d+)?)$/)
-                if (m) {
-                    const op = m[1]
-                    const x = Number(m[2])
-                    if (op === ">=") return n >= x
-                    if (op === "<=") return n <= x
-                    if (op === ">") return n > x
-                    if (op === "<") return n < x
-                }
-                const exact = Number(s.replace(",", "."))
-                return Number.isFinite(exact) ? n === exact : true
-            },
+            filterFn: multiSelectFilter,
         },
     ]
 }
