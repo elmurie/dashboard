@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
@@ -113,7 +114,6 @@ function EditableInVenditaCell({
     initialValue: "SI" | "NO"
     onCommit: (next: "SI" | "NO") => Promise<void>
 }) {
-    const React = require("react") as typeof import("react")
     const [value, setValue] = React.useState<"SI" | "NO">(initialValue)
     const [saving, setSaving] = React.useState(false)
 
@@ -159,7 +159,6 @@ function EditablePriceCell({
     initialValue: number
     onCommit: (next: number) => Promise<void>
 }) {
-    const React = require("react") as typeof import("react")
     const [value, setValue] = React.useState(String(initialValue))
     const [saving, setSaving] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)

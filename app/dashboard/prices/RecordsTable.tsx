@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+    Column,
     ColumnFiltersState,
     getCoreRowModel,
     getFilteredRowModel,
@@ -15,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { RecordRow, getColumns } from "./columns"
 
@@ -34,6 +36,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
     const columns = React.useMemo(() => getColumns(updateRecord), [])
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data,
         columns,
@@ -70,6 +73,52 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getPaginationRowModel: getPaginationRowModel(),
     })
 
+    function renderColumnFilter(column: Column<RecordRow>) {
+        const value = (column.getFilterValue() as string) ?? ""
+
+        if (column.id === "in_vendita") {
+            return (
+                <Select
+                    value={value || "all"}
+                    onValueChange={(next) => column.setFilterValue(next === "all" ? "" : next)}
+                >
+                    <SelectTrigger className="h-8 w-full min-w-[120px]">
+                        <SelectValue placeholder="Tutti" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tutti</SelectItem>
+                        <SelectItem value="SI">SI</SelectItem>
+                        <SelectItem value="NO">NO</SelectItem>
+                    </SelectContent>
+                </Select>
+            )
+        }
+
+        if (column.id === "prezzo") {
+            return (
+                <Input
+                    placeholder=">= 70"
+                    value={value}
+                    onChange={(e) => column.setFilterValue(e.target.value)}
+                    className="h-8 min-w-[100px]"
+                />
+            )
+        }
+
+        if (["sede", "medico", "nome_prestazione", "codice_azienda", "nome_prestazione_azienda"].includes(column.id)) {
+            return (
+                <Input
+                    placeholder="Filtra..."
+                    value={value}
+                    onChange={(e) => column.setFilterValue(e.target.value)}
+                    className="h-8 min-w-[120px]"
+                />
+            )
+        }
+
+        return null
+    }
+
     return (
         <div className="space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -81,20 +130,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 />
 
                 <div className="flex gap-2">
-                    <Input
-                        placeholder='Filtro prezzo es: ">= 70"'
-                        value={(table.getColumn("prezzo")?.getFilterValue() as string) ?? ""}
-                        onChange={(e) => table.getColumn("prezzo")?.setFilterValue(e.target.value)}
-                        className="w-[180px]"
-                    />
-
-                    <Input
-                        placeholder='In vendita: "SI" o "NO"'
-                        value={(table.getColumn("in_vendita")?.getFilterValue() as string) ?? ""}
-                        onChange={(e) => table.getColumn("in_vendita")?.setFilterValue(e.target.value.toUpperCase())}
-                        className="w-[150px]"
-                    />
-
                     <Button
                         variant="outline"
                         onClick={() => {
@@ -117,6 +152,16 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(header.column.columnDef.header, header.getContext())}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
+
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={`${headerGroup.id}-filters`}>
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={`${header.id}-filter`}>
+                                        {header.isPlaceholder ? null : renderColumnFilter(header.column)}
                                     </TableHead>
                                 ))}
                             </TableRow>
