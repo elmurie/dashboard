@@ -40,9 +40,13 @@ function normalizePriceInput(value: string): number | null {
 }
 
 function validatePrice(n: number): { ok: true } | { ok: false; reason: string } {
-    if (n < 0) return { ok: false, reason: "Il prezzo non può essere negativo." }
-    if (n > 100000) return { ok: false, reason: "Il prezzo sembra troppo alto." }
-    // opzionale: max 2 decimali
+    if (n <= 0) return { ok: false, reason: "Il prezzo non può essere negativo." }
+    if (n == 1) return { ok: false, reason: "Il prezzo non può essere 1." }
+    if (!Number.isInteger(n))
+        return { ok: false, reason: "Il prezzo deve essere un numero intero." }
+
+    if (n > 100000)
+        return { ok: false, reason: "Il prezzo sembra troppo alto." }
     const twoDecimals = Math.round(n * 100) / 100
     if (Math.abs(twoDecimals - n) > 1e-9) return { ok: false, reason: "Max 2 decimali." }
     return { ok: true }
