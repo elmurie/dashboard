@@ -10,6 +10,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 export type RecordRow = {
     what_id: string
@@ -148,6 +157,7 @@ function EditablePriceCell({
     const [value, setValue] = React.useState(String(initialValue))
     const [saving, setSaving] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
+    const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false)
 
     React.useEffect(() => {
         // se la riga viene aggiornata dall'esterno, sincronizza
@@ -160,6 +170,7 @@ function EditablePriceCell({
         const parsed = normalizePriceInput(value)
         if (parsed === null) {
             setError("Inserisci un numero.")
+            setIsErrorDialogOpen(true)
             setValue(String(initialValue))
             return
         }
@@ -168,6 +179,7 @@ function EditablePriceCell({
         const v = validatePrice(rounded)
         if (!v.ok) {
             setError(v.reason)
+            setIsErrorDialogOpen(true)
             setValue(String(initialValue))
             return
         }
@@ -179,6 +191,7 @@ function EditablePriceCell({
             await onCommit(rounded)
         } catch {
             setError("Errore nel salvataggio.")
+            setIsErrorDialogOpen(true)
             setValue(String(initialValue))
         } finally {
             setSaving(false)
@@ -192,6 +205,7 @@ function EditablePriceCell({
                 inputMode="decimal"
                 value={value}
                 disabled={saving}
+                aria-invalid={Boolean(error)}
                 onChange={(e) => setValue(e.target.value)}
                 onBlur={commit}
                 onKeyDown={(e) => {
@@ -205,7 +219,20 @@ function EditablePriceCell({
                     }
                 }}
             />
-            {error ? <span className="text-xs text-destructive">{error}</span> : null}
+
+            <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Errore validazione prezzo</DialogTitle>
+                        <DialogDescription>{error}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button type="button" onClick={() => setIsErrorDialogOpen(false)}>
+                            Chiudi
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
