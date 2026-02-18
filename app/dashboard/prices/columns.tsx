@@ -29,6 +29,7 @@ export type RecordRow = {
     codice_azienda: string
     nome_prestazione_azienda: string
     prezzo: number
+    prezzo_mercato?: number
 }
 
 type UpdateFn = (what_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
@@ -95,6 +96,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                 return (
                     <EditablePriceCell
                         initialValue={r.prezzo}
+                        marketPrice={r.prezzo_mercato}
                         onCommit={async (next) => {
                             await updateRecord(r.what_id, { prezzo: next })
                         }}
@@ -153,15 +155,19 @@ function EditableInVenditaCell({
 
 function EditablePriceCell({
     initialValue,
+    marketPrice,
     onCommit,
 }: {
     initialValue: number
+    marketPrice?: number
     onCommit: (next: number) => Promise<void>
 }) {
     const [value, setValue] = React.useState(String(initialValue))
     const [saving, setSaving] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
     const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false)
+    const [confirmPrice, setConfirmPrice] = React.useState<number | null>(null)
+    const [isMarketDialogOpen, setIsMarketDialogOpen] = React.useState(false)
 
     React.useEffect(() => {
         // se la riga viene aggiornata dall'esterno, sincronizza
@@ -190,9 +196,19 @@ function EditablePriceCell({
 
         if (rounded === initialValue) return
 
+        if (typeof marketPrice === "number" && Math.abs(rounded - marketPrice) > 10) {
+            setConfirmPrice(rounded)
+            setIsMarketDialogOpen(true)
+            return
+        }
+
+        await persistPrice(rounded)
+    }
+
+    async function persistPrice(nextPrice: number) {
         try {
             setSaving(true)
-            await onCommit(rounded)
+            await onCommit(nextPrice)
         } catch {
             setError("Errore nel salvataggio.")
             setIsErrorDialogOpen(true)
@@ -233,6 +249,50 @@ function EditablePriceCell({
                     <DialogFooter>
                         <Button type="button" onClick={() => setIsErrorDialogOpen(false)}>
                             Chiudi
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={isMarketDialogOpen}
+                onOpenChange={(open) => {
+                    setIsMarketDialogOpen(open)
+                    if (!open) {
+                        setConfirmPrice(null)
+                        setValue(String(initialValue))
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Conferma cambio prezzo</DialogTitle>
+                        <DialogDescription>
+                            Il prezzo di mercato per questa prestazione nella tua zona è di {marketPrice}. Vuoi confermare il tuo prezzo?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setConfirmPrice(null)
+                                setIsMarketDialogOpen(false)
+                                setValue(String(initialValue))
+                            }}
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={async () => {
+                                if (confirmPrice === null) return
+                                setIsMarketDialogOpen(false)
+                                await persistPrice(confirmPrice)
+                                setConfirmPrice(null)
+                            }}
+                        >
+                            Conferma
                         </Button>
                     </DialogFooter>
                 </DialogContent>
