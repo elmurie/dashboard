@@ -49,7 +49,7 @@ function normalizePriceInput(value: string): number | null {
 }
 
 function validatePrice(n: number): { ok: true } | { ok: false; reason: string } {
-    if (n <= 0) return { ok: false, reason: "Il prezzo non può essere negativo." }
+    if (n <= 0) return { ok: false, reason: "Il prezzo non può essere 0 o negativo." }
     if (n == 1) return { ok: false, reason: "Il prezzo non può essere 1." }
     if (!Number.isInteger(n))
         return { ok: false, reason: "Il prezzo deve essere un numero intero." }

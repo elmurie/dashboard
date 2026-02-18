@@ -49,7 +49,7 @@
 :root {
     /* variabili mie */
     --primary-text:  oklch(0.145 0 0);
-    --primary-bg: oklch(1 0 0);;
+    --primary-bg: oklch(1 0 0);
     --accent-text: oklch(1 0 0);
     --accent-bg: oklch(0.4643 0.082974 182.3905);
     /* /variabili mie */
@@ -60,7 +60,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: var(--accent-bg);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
