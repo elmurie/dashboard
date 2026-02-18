@@ -37,6 +37,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [globalFilter, setGlobalFilter] = React.useState("")
+    const [openFilterColumnId, setOpenFilterColumnId] = React.useState<string | null>(null)
 
     const columns = React.useMemo(() => getColumns(updateRecord), [])
 
@@ -115,7 +116,25 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         const selected = ((column.getFilterValue() as unknown[] | undefined) ?? [])
 
         return (
-            <details className="relative">
+            <details
+                className="relative"
+                open={openFilterColumnId === column.id}
+                onToggle={(event) => {
+                    const isOpen = event.currentTarget.open
+                    if (isOpen) {
+                        setOpenFilterColumnId(column.id)
+                        return
+                    }
+
+                    setOpenFilterColumnId((current) => (current === column.id ? null : current))
+                }}
+                onBlurCapture={(event) => {
+                    const nextFocusedElement = event.relatedTarget as Node | null
+                    if (!event.currentTarget.contains(nextFocusedElement)) {
+                        setOpenFilterColumnId((current) => (current === column.id ? null : current))
+                    }
+                }}
+            >
                 <summary className={clsx('cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted',{'active':selected.length})}>
                     Filtro {selected.length ? `(${selected.length})` : ""}
                 </summary>
