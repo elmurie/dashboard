@@ -1,5 +1,5 @@
 "use client"
-
+import clsx from 'clsx';
 import * as React from "react"
 import {
     Column,
@@ -83,6 +83,8 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         },
     })
 
+    const rows = table.getRowModel().rows
+
     const pagination = table.getState().pagination
     const pageCount = table.getPageCount()
 
@@ -114,7 +116,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
         return (
             <details className="relative">
-                <summary className="cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted">
+                <summary className={clsx('cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted',{'active':selected.length})}>
                     Filtro {selected.length ? `(${selected.length})` : ""}
                 </summary>
 
@@ -207,16 +209,28 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                     </TableHeader>
 
                     <TableBody>
-                        {table.getRowModel().rows.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
+                        {rows.length ? (
+                            <>
+                                {rows.map((row) => (
+                                    <TableRow key={row.id}>
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+
+                                {/* 👇 FILLER: mantiene la tabella "alta" quando ci sono poche righe */}
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={table.getAllColumns().length}
+                                        className="p-0"
+                                    >
+                                        <div className="h-[40vh]" />
+                                    </TableCell>
                                 </TableRow>
-                            ))
+                            </>
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
