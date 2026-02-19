@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 export type RecordRow = {
+    _id : string
     what_id: string
     in_vendita: "SI" | "NO"
     sede: string
@@ -32,11 +33,11 @@ export type RecordRow = {
     prezzo_mercato?: number
 }
 
-type UpdateFn = (what_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
+type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
 
-const multiSelectFilter: FilterFn<RecordRow> = (row, id, value) => {
+const multiSelectFilter: FilterFn<RecordRow> = (row, _id, value) => {
     if (!Array.isArray(value) || value.length === 0) return true
-    const cellValue = row.getValue(id)
+    const cellValue = row.getValue(_id)
     return value.some((selected) => selected === cellValue)
 }
 
@@ -80,7 +81,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                     initialValue={r.in_vendita}
                     onCommit={async (next) => {
                         if (next === r.in_vendita) return
-                        await updateRecord(r.what_id, { in_vendita: next })
+                        await updateRecord(r._id, { in_vendita: next })
                     }}
                 />
             },
@@ -98,7 +99,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                         initialValue={r.prezzo}
                         marketPrice={r.prezzo_mercato}
                         onCommit={async (next) => {
-                            await updateRecord(r.what_id, { prezzo: next })
+                            await updateRecord(r._id, { prezzo: next })
                         }}
                     />
                 )

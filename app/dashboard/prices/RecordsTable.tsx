@@ -22,8 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { RecordRow, getColumns } from "./columns"
 
-async function updateRecord(what_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) {
-    const res = await fetch(`/api/records/${what_id}`, {
+async function updateRecord(id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) {
+    const res = await fetch(`/api/records/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
@@ -56,6 +56,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
             const r = row.original
             const hay = [
+                r._id,
                 r.sede,
                 r.medico,
                 r.nome_prestazione,
