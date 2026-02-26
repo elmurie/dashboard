@@ -21,16 +21,20 @@ import {
 import { Button } from "@/components/ui/button"
 
 export type RecordRow = {
-    _id : string
+    _id: string
+    id_sede: string
+    id_medico: string
+    id_prestazione: string
     what_id: string
     in_vendita: "SI" | "NO"
     sede: string
     medico: string
-    nome_prestazione: string
-    codice_azienda: string
+    nome_prestazione_cup: string
     nome_prestazione_azienda: string
     prezzo: number
-    prezzo_mercato?: number
+    prezzo_min: number
+    prezzo_avg: number
+    prezzo_max: number
 }
 
 type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
@@ -67,8 +71,8 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
         { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
         { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione", header: "Prestazione", filterFn: multiSelectFilter },
-        { accessorKey: "codice_azienda", header: "Codice", filterFn: multiSelectFilter },
+        { accessorKey: "nome_prestazione_cup", header: "Prestazione", filterFn: multiSelectFilter },
+        { accessorKey: "id_prestazione", header: "Codice", filterFn: multiSelectFilter },
         { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
 
         {
@@ -97,7 +101,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                 return (
                     <EditablePriceCell
                         initialValue={r.prezzo}
-                        marketPrice={r.prezzo_mercato}
+                        marketPrice={r.prezzo_avg}
                         onCommit={async (next) => {
                             await updateRecord(r._id, { prezzo: next })
                         }}
