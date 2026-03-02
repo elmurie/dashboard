@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { Company, normalizeCompany } from "@/lib/companies"
 
 type Row = {
   _id: string
@@ -19,11 +20,14 @@ type Row = {
   prezzo_max: number
 }
 
+type RecordsByCompany = Record<Company, Row[]>
+
 export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ _id: string }> }
 ) {
   const { _id } = await ctx.params
+  const company = normalizeCompany(req.nextUrl.searchParams.get("company"))
 
   const patch = (await req.json()) as Partial<Pick<Row, "prezzo" | "in_vendita">>
 
@@ -40,14 +44,16 @@ export async function PATCH(
 
   const filePath = path.join(process.cwd(), "records.json")
   const raw = await readFile(filePath, "utf8")
-  const rows = JSON.parse(raw) as Row[]
+  const recordsByCompany = JSON.parse(raw) as RecordsByCompany
 
+  const rows = recordsByCompany[company] ?? []
   const idx = rows.findIndex((r) => r._id === _id)
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   rows[idx] = { ...rows[idx], ...patch }
+  recordsByCompany[company] = rows
 
-  await writeFile(filePath, JSON.stringify(rows, null, 2) + "\n", "utf8")
+  await writeFile(filePath, JSON.stringify(recordsByCompany, null, 2) + "\n", "utf8")
 
   return NextResponse.json(rows[idx])
 }
