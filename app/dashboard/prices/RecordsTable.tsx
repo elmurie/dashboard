@@ -43,8 +43,8 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-    const [globalFilter, setGlobalFilter] = React.useState("")
     const [openFilterColumnId, setOpenFilterColumnId] = React.useState<string | null>(null)
+    const [filterSearch, setFilterSearch] = React.useState<Record<string, string>>({})
 
     const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch)), [company])
 
@@ -52,32 +52,9 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     const table = useReactTable({
         data,
         columns,
-        state: { sorting, columnFilters, globalFilter },
+        state: { sorting, columnFilters },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
-        onGlobalFilterChange: setGlobalFilter,
-
-        globalFilterFn: (row, _columnId, filterValue) => {
-            const q = String(filterValue ?? "").toLowerCase().trim()
-            if (!q) return true
-
-            const r = row.original
-            const hay = [
-                r._id,
-                r.sede,
-                r.medico,
-                r.nome_prestazione_cup,
-                r.nome_prestazione_azienda,
-                r.id_prestazione,
-                r.in_vendita,
-                String(r.prezzo),
-                r.what_id,
-            ]
-                .join(" ")
-                .toLowerCase()
-
-            return hay.includes(q)
-        },
 
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -121,7 +98,14 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         const uniqueValues = Array.from(column.getFacetedUniqueValues().keys())
         if (!uniqueValues.length) return null
 
+        const filterLabel = typeof column.columnDef.header === "string" ? column.columnDef.header : column.id
         const selected = ((column.getFilterValue() as unknown[] | undefined) ?? [])
+        const searchValue = filterSearch[column.id] ?? ""
+        const normalizedSearch = searchValue.trim().toLowerCase()
+
+        const filteredValues = uniqueValues
+            .filter((value) => String(value).toLowerCase().includes(normalizedSearch))
+            .sort((a, b) => String(a).localeCompare(String(b), "it", { numeric: true }))
 
         return (
             <details
@@ -144,10 +128,20 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 }}
             >
                 <summary className={clsx('cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted',{'active':selected.length})}>
-                    Filtro {selected.length ? `(${selected.length})` : ""}
+                    {filterLabel} {selected.length ? `(${selected.length})` : ""}
                 </summary>
 
                 <div className="absolute z-20 mt-1 w-56 rounded-md border bg-background p-2 shadow">
+                    <Input
+                        value={searchValue}
+                        onChange={(event) => {
+                            const next = event.target.value
+                            setFilterSearch((current) => ({ ...current, [column.id]: next }))
+                        }}
+                        placeholder={`Cerca ${filterLabel.toLowerCase()}...`}
+                        className="mb-2 h-7 text-xs"
+                    />
+
                     <div className="mb-2 flex items-center justify-between gap-2">
                         <Button
                             type="button"
@@ -159,14 +153,12 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                             Tutti
                         </Button>
                         <span className="text-[11px] text-muted-foreground">
-                            {uniqueValues.length} valori
+                            {filteredValues.length}/{uniqueValues.length} valori
                         </span>
                     </div>
 
                     <div className="max-h-56 space-y-1 overflow-auto pr-1">
-                        {uniqueValues
-                            .sort((a, b) => String(a).localeCompare(String(b), "it", { numeric: true }))
-                            .map((value, idx) => {
+                        {filteredValues.map((value, idx) => {
                                 const checked = selected.some((item) => item === value)
                                 const id = `${column.id}-${idx}-${String(value)}`
 
@@ -182,6 +174,10 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                     </label>
                                 )
                             })}
+
+                        {!filteredValues.length ? (
+                            <div className="px-1 py-2 text-xs text-muted-foreground">Nessun valore trovato.</div>
+                        ) : null}
                     </div>
                 </div>
             </details>
@@ -190,18 +186,10 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
     return (
         <div className="space-y-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <Input
-                    placeholder="Cerca (sede, medico, prestazione, codice...)"
-                    value={globalFilter}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="sm:max-w-md"
-                />
-
+            <div className="flex justify-end">
                 <Button
                     variant="outline"
                     onClick={() => {
-                        setGlobalFilter("")
                         setColumnFilters([])
                     }}
                 >
@@ -216,18 +204,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
                                     <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={`${headerGroup.id}-filters`}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={`${header.id}-filter`}>
                                         {header.isPlaceholder ? null : renderColumnFilter(header.column)}
                                     </TableHead>
                                 ))}
