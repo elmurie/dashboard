@@ -1,6 +1,7 @@
 "use client"
 import clsx from 'clsx';
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
     Column,
     ColumnFiltersState,
@@ -22,8 +23,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { RecordRow, getColumns } from "./columns"
 
-async function updateRecord(id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) {
-    const res = await fetch(`/api/records/${id}`, {
+async function updateRecord(
+    id: string,
+    company: string,
+    patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>
+) {
+    const res = await fetch(`/api/records/${id}?company=${company}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
@@ -33,13 +38,15 @@ async function updateRecord(id: string, patch: Partial<Pick<RecordRow, "prezzo" 
 
 export function RecordsTable({ data }: { data: RecordRow[] }) {
     const pageSizeOptions = [25, 50, 100]
+    const searchParams = useSearchParams()
+    const company = searchParams.get("company") ?? "humanray"
 
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [globalFilter, setGlobalFilter] = React.useState("")
     const [openFilterColumnId, setOpenFilterColumnId] = React.useState<string | null>(null)
 
-    const columns = React.useMemo(() => getColumns(updateRecord), [])
+    const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch)), [company])
 
     // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({

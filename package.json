@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "stress:generate": "node scripts/generate-stress-records.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

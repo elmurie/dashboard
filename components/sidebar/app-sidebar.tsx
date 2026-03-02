@@ -15,12 +15,24 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { sidebarLinks } from "./sidebar-links"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LogOut } from "lucide-react"
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { COMPANIES, normalizeCompany } from "@/lib/companies"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const company = normalizeCompany(searchParams.get("company"))
+
+  const withCompany = (href: string) => `${href}?company=${company}`
+
+  const onCompanyChange = (nextCompany: string) => {
+    if (nextCompany === company) return
+    router.push(`${pathname}?company=${nextCompany}`)
+  }
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -34,30 +46,48 @@ export function AppSidebar() {
         />
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Company</SidebarGroupLabel>
+          <Select value={company} onValueChange={onCompanyChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleziona company" />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPANIES.map((companyName) => (
+                <SelectItem key={companyName} value={companyName}>
+                  {companyName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SidebarGroup>
+
         {sidebarLinks.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>
-              {group.label}
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
 
             <SidebarMenu>
-              {group.items.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild
-                    isActive={pathname === item.href}>
-                    <Link href={item.href}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {group.items.map((item) => {
+                const href = withCompany(item.href)
+                const isActive = pathname === item.href
+
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link href={href}>
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.title}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroup>
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <Link href='/'>
+        <Link href="/">
           <Button>
             <LogOut className="mr-2 h-4 w-4" />
             Log Out
