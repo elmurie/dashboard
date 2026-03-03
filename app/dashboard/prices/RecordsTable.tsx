@@ -203,7 +203,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead key={header.id} className="border-r border-border last:border-r-0">
                                         {header.isPlaceholder ? null : renderColumnFilter(header.column)}
                                     </TableHead>
                                 ))}
@@ -217,7 +217,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                 {rows.map((row) => (
                                     <TableRow key={row.id} className="odd:bg-[var(--sidebar)] even:bg-background">
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell key={cell.id} className="border-r border-border last:border-r-0">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         ))}

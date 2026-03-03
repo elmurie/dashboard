@@ -16,13 +16,13 @@ export default async function Page({
 
   return (
     <div className="w-full">
-      <PageHeader
+      {/* <PageHeader
         title="Prezzi"
         description="Cambia i prezzi direttamente dalla tabella"
-      />
+      /> */}
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full py-6 px-2">
+        <div className="w-full px-2">
           <RecordsTable data={data} />
         </div>
       </main>
