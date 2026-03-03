@@ -22,7 +22,7 @@ export default async function Page({
       />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-screen-2xl py-6 px-2">
+        <div className="w-full py-6 px-2">
           <RecordsTable data={data} />
         </div>
       </main>

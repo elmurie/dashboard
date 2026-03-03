@@ -193,7 +193,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                         setColumnFilters([])
                     }}
                 >
-                    Reset
+                    Reset Filtri
                 </Button>
             </div>
 
@@ -215,7 +215,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                         {rows.length ? (
                             <>
                                 {rows.map((row) => (
-                                    <TableRow key={row.id}>
+                                    <TableRow key={row.id} className="odd:bg-[var(--sidebar)] even:bg-background">
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell key={cell.id}>
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
