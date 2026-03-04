@@ -40,6 +40,7 @@ export type RecordRow = {
 }
 
 type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
+const PRICE_DEVIATION_PERCENT_THRESHOLD = 10
 
 const multiSelectFilter: FilterFn<RecordRow> = (row, _id, value) => {
     if (!Array.isArray(value) || value.length === 0) return true
@@ -152,7 +153,13 @@ function EditableInVenditaCell({
         >
             <SelectTrigger
                 size="sm"
-                className={cn("h-7 w-[80px] px-2 text-[12px] disabled:cursor-not-allowed disabled:bg-black", { "bg-gray-100": value == 'NO' })}
+                className={cn(
+                    "h-7 w-[80px] border-2 px-2 text-[12px] disabled:cursor-not-allowed disabled:bg-black",
+                    {
+                        "bg-gray-100 border-orange-500": value === "NO",
+                        "border-[var(--accent-bg)]": value === "SI",
+                    }
+                )}
             >
                 <SelectValue />
             </SelectTrigger>
@@ -185,6 +192,14 @@ function EditablePriceCell({
     const [isMarketDialogOpen, setIsMarketDialogOpen] = React.useState(false)
     const [isTooltipOpen, setIsTooltipOpen] = React.useState(false)
     const [isPriceFieldFocused, setIsPriceFieldFocused] = React.useState(false)
+
+    const isPriceOutOfThreshold = React.useMemo(() => {
+        const parsed = normalizePriceInput(value)
+        if (parsed === null || typeof marketPrice !== "number" || marketPrice === 0) return false
+
+        const deviationPercent = (Math.abs(parsed - marketPrice) / marketPrice) * 100
+        return deviationPercent >= PRICE_DEVIATION_PERCENT_THRESHOLD
+    }, [marketPrice, value])
 
     React.useEffect(() => {
         // se la riga viene aggiornata dall'esterno, sincronizza
@@ -240,7 +255,9 @@ function EditablePriceCell({
             <Tooltip open={isTooltipOpen}>
                 <TooltipTrigger asChild>
                     <Input
-                        className="h-7 w-[60px] px-1 text-right"
+                        className={cn("h-7 w-[60px] border-2 px-1 text-right", {
+                            "border-orange-500": isPriceOutOfThreshold,
+                        })}
                         inputMode="decimal"
                         value={value}
                         disabled={saving}
