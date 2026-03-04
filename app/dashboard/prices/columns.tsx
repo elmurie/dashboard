@@ -156,7 +156,7 @@ function EditableInVenditaCell({
                 className={cn(
                     "h-7 w-[80px] border-2 px-2 text-[12px] disabled:cursor-not-allowed disabled:bg-black",
                     {
-                        "bg-gray-100 border-orange-500": value === "NO",
+                        "bg-gray-100 border-gray-500": value === "NO",
                         "border-[var(--accent-bg)]": value === "SI",
                     }
                 )}
@@ -255,7 +255,7 @@ function EditablePriceCell({
             <Tooltip open={isTooltipOpen}>
                 <TooltipTrigger asChild>
                     <Input
-                        className={cn("h-7 w-[60px] border-2 px-1 text-right", {
+                        className={cn("h-7 w-[60px] border-[var(--accent-bg)] border-2 px-1 text-right", {
                             "border-orange-500": isPriceOutOfThreshold,
                         })}
                         inputMode="decimal"
