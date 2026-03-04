@@ -19,6 +19,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 export type RecordRow = {
@@ -85,7 +86,9 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                 return (
                     <EditablePriceCell
                         initialValue={r.prezzo}
+                        marketMinPrice={r.prezzo_min}
                         marketPrice={r.prezzo_avg}
+                        marketMaxPrice={r.prezzo_max}
                         onCommit={async (next) => {
                             await updateRecord(r._id, { prezzo: next })
                         }}
@@ -163,11 +166,15 @@ function EditableInVenditaCell({
 
 function EditablePriceCell({
     initialValue,
+    marketMinPrice,
     marketPrice,
+    marketMaxPrice,
     onCommit,
 }: {
     initialValue: number
+    marketMinPrice?: number
     marketPrice?: number
+    marketMaxPrice?: number
     onCommit: (next: number) => Promise<void>
 }) {
     const [value, setValue] = React.useState(String(initialValue))
@@ -176,6 +183,8 @@ function EditablePriceCell({
     const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false)
     const [confirmPrice, setConfirmPrice] = React.useState<number | null>(null)
     const [isMarketDialogOpen, setIsMarketDialogOpen] = React.useState(false)
+    const [isTooltipOpen, setIsTooltipOpen] = React.useState(false)
+    const [isPriceFieldFocused, setIsPriceFieldFocused] = React.useState(false)
 
     React.useEffect(() => {
         // se la riga viene aggiornata dall'esterno, sincronizza
@@ -228,25 +237,46 @@ function EditablePriceCell({
 
     return (
         <div className="flex flex-col gap-1">
-            <Input
-                className="h-7 w-[60px] px-1 text-right"
-                inputMode="decimal"
-                value={value}
-                disabled={saving}
-                aria-invalid={Boolean(error)}
-                onChange={(e) => setValue(e.target.value)}
-                onBlur={commit}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        ; (e.currentTarget as HTMLInputElement).blur()
-                    }
-                    if (e.key === "Escape") {
-                        setError(null)
-                        setValue(String(initialValue))
-                            ; (e.currentTarget as HTMLInputElement).blur()
-                    }
-                }}
-            />
+            <Tooltip open={isTooltipOpen}>
+                <TooltipTrigger asChild>
+                    <Input
+                        className="h-7 w-[60px] px-1 text-right"
+                        inputMode="decimal"
+                        value={value}
+                        disabled={saving}
+                        aria-invalid={Boolean(error)}
+                        onChange={(e) => setValue(e.target.value)}
+                        onMouseEnter={() => setIsTooltipOpen(true)}
+                        onMouseLeave={() => {
+                            if (!isPriceFieldFocused) setIsTooltipOpen(false)
+                        }}
+                        onFocus={() => {
+                            setIsPriceFieldFocused(true)
+                            setIsTooltipOpen(true)
+                        }}
+                        onBlur={async () => {
+                            setIsPriceFieldFocused(false)
+                            setIsTooltipOpen(false)
+                            await commit()
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                ; (e.currentTarget as HTMLInputElement).blur()
+                            }
+                            if (e.key === "Escape") {
+                                setError(null)
+                                setValue(String(initialValue))
+                                    ; (e.currentTarget as HTMLInputElement).blur()
+                            }
+                        }}
+                    />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="space-y-0.5 text-left">
+                    <p>prezzo_min: {marketMinPrice ?? "-"}</p>
+                    <p>prezzo_avg: {marketPrice ?? "-"}</p>
+                    <p>prezzo_max: {marketMaxPrice ?? "-"}</p>
+                </TooltipContent>
+            </Tooltip>
 
             <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
                 <DialogContent>
