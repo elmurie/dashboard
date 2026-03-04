@@ -35,13 +35,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="items-center">
         <Image
           className="dark:invert"
-          src="/cup_solidale.png"
+          src="/spinner.png"
           alt="Cupsolidale logo"
-          width={250}
-          height={38}
+          width={64}
+          height={64}
           priority
         />
       </SidebarHeader>
