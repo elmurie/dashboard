@@ -19,6 +19,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export type RecordRow = {
     _id: string
@@ -71,27 +72,10 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
         { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
         { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
+        { accessorKey: "id_medico", header: "ID Medico", filterFn: multiSelectFilter },
         { accessorKey: "nome_prestazione_cup", header: "Prestazione", filterFn: multiSelectFilter },
-        { accessorKey: "id_prestazione", header: "Codice", filterFn: multiSelectFilter },
+        { accessorKey: "id_prestazione", header: "ID Prestazione", filterFn: multiSelectFilter },
         { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
-
-        {
-            accessorKey: "in_vendita",
-            header: "In vendita",
-            cell: ({ row }) => {
-                const r = row.original
-
-                return <EditableInVenditaCell
-                    initialValue={r.in_vendita}
-                    onCommit={async (next) => {
-                        if (next === r.in_vendita) return
-                        await updateRecord(r._id, { in_vendita: next })
-                    }}
-                />
-            },
-            filterFn: multiSelectFilter,
-        },
-
         {
             accessorKey: "prezzo",
             header: "Prezzo",
@@ -107,6 +91,22 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                         }}
                     />
                 )
+            },
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "in_vendita",
+            header: "In vendita",
+            cell: ({ row }) => {
+                const r = row.original
+
+                return <EditableInVenditaCell
+                    initialValue={r.in_vendita}
+                    onCommit={async (next) => {
+                        if (next === r.in_vendita) return
+                        await updateRecord(r._id, { in_vendita: next })
+                    }}
+                />
             },
             filterFn: multiSelectFilter,
         },
@@ -147,7 +147,7 @@ function EditableInVenditaCell({
             onValueChange={(v) => commit(v as "SI" | "NO")}
             disabled={saving}
         >
-            <SelectTrigger className="h-8 w-[110px]">
+            <SelectTrigger className={cn("w-[80px] text-[12px] disabled:bg-black disabled:cursor-not-allowed",{ "bg-gray-100": value == 'NO'})}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -226,7 +226,7 @@ function EditablePriceCell({
     return (
         <div className="flex flex-col gap-1">
             <Input
-                className="h-8 w-[110px]"
+                className="h-8 w-[60px] text-right"
                 inputMode="decimal"
                 value={value}
                 disabled={saving}

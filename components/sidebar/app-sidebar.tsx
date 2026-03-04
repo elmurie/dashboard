@@ -49,7 +49,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Company</SidebarGroupLabel>
           <Select value={company} onValueChange={onCompanyChange}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white">
               <SelectValue placeholder="Seleziona company" />
             </SelectTrigger>
             <SelectContent>
@@ -64,7 +64,7 @@ export function AppSidebar() {
 
         {sidebarLinks.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            {/* <SidebarGroupLabel>{group.label}</SidebarGroupLabel> */}
 
             <SidebarMenu>
               {group.items.map((item) => {

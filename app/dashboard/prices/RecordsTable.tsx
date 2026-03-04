@@ -64,7 +64,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         getFacetedUniqueValues: getFacetedUniqueValues(),
         initialState: {
             pagination: {
-                pageSize: pageSizeOptions[0],
+                pageSize: pageSizeOptions[2],
             },
         },
     })
@@ -127,7 +127,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                     }
                 }}
             >
-                <summary className={clsx('cursor-pointer list-none rounded-md border px-2 py-1 text-xs hover:bg-muted',{'active':selected.length})}>
+                <summary className={clsx('cursor-pointer list-none py-1 text-xs',{'active rounded-md border px-2':selected.length})}>
                     {filterLabel} {selected.length ? `(${selected.length})` : ""}
                 </summary>
 
