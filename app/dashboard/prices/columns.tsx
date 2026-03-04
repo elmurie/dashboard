@@ -272,9 +272,9 @@ function EditablePriceCell({
                     />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="space-y-0.5 text-left">
-                    <p>prezzo_min: {marketMinPrice ?? "-"}</p>
-                    <p>prezzo_avg: {marketPrice ?? "-"}</p>
-                    <p>prezzo_max: {marketMaxPrice ?? "-"}</p>
+                    <p>Minimo: {marketMinPrice ?? "-"}</p>
+                    <p>Medio: {marketPrice ?? "-"}</p>
+                    <p>Massimo: {marketMaxPrice ?? "-"}</p>
                 </TooltipContent>
             </Tooltip>
 
