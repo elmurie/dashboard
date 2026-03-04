@@ -147,7 +147,10 @@ function EditableInVenditaCell({
             onValueChange={(v) => commit(v as "SI" | "NO")}
             disabled={saving}
         >
-            <SelectTrigger className={cn("w-[80px] text-[12px] disabled:bg-black disabled:cursor-not-allowed",{ "bg-gray-100": value == 'NO'})}>
+            <SelectTrigger
+                size="sm"
+                className={cn("h-7 w-[80px] px-2 text-[12px] disabled:cursor-not-allowed disabled:bg-black", { "bg-gray-100": value == 'NO' })}
+            >
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -226,7 +229,7 @@ function EditablePriceCell({
     return (
         <div className="flex flex-col gap-1">
             <Input
-                className="h-8 w-[60px] text-right"
+                className="h-7 w-[60px] px-1 text-right"
                 inputMode="decimal"
                 value={value}
                 disabled={saving}
