@@ -50,6 +50,11 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     const [bottomScrollWidth, setBottomScrollWidth] = React.useState(0)
     const isSyncingScrollRef = React.useRef(false)
 
+    const isInteractiveElement = (target: EventTarget | null) => {
+        if (!(target instanceof Element)) return false
+        return Boolean(target.closest("button, a, input, select, textarea, summary, details, [role='button'], [contenteditable='true']"))
+    }
+
     const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch)), [company])
 
     // eslint-disable-next-line react-hooks/incompatible-library
@@ -137,6 +142,75 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
             bottomScrollbar.removeEventListener("scroll", syncFromBottom)
         }
     }, [rows.length])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        if (!tableContainer) return
+
+        const handleWheel = (event: WheelEvent) => {
+            const horizontalDelta = event.deltaX + (event.shiftKey ? event.deltaY : 0)
+            if (!horizontalDelta) return
+
+            tableContainer.scrollLeft += horizontalDelta
+            event.preventDefault()
+        }
+
+        tableContainer.addEventListener("wheel", handleWheel, { passive: false })
+
+        return () => {
+            tableContainer.removeEventListener("wheel", handleWheel)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        if (!tableContainer) return
+
+        let isDragging = false
+        let startX = 0
+        let startScrollLeft = 0
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (event.button !== 0 || isInteractiveElement(event.target)) return
+
+            isDragging = true
+            startX = event.clientX
+            startScrollLeft = tableContainer.scrollLeft
+            tableContainer.classList.add("cursor-grabbing")
+            tableContainer.setPointerCapture(event.pointerId)
+        }
+
+        const handlePointerMove = (event: PointerEvent) => {
+            if (!isDragging) return
+            const deltaX = event.clientX - startX
+            tableContainer.scrollLeft = startScrollLeft - deltaX
+        }
+
+        const stopDragging = (pointerId?: number) => {
+            if (!isDragging) return
+            isDragging = false
+            tableContainer.classList.remove("cursor-grabbing")
+            if (pointerId !== undefined && tableContainer.hasPointerCapture(pointerId)) {
+                tableContainer.releasePointerCapture(pointerId)
+            }
+        }
+
+        const handlePointerUp = (event: PointerEvent) => stopDragging(event.pointerId)
+        const handlePointerCancel = (event: PointerEvent) => stopDragging(event.pointerId)
+
+        tableContainer.addEventListener("pointerdown", handlePointerDown)
+        tableContainer.addEventListener("pointermove", handlePointerMove)
+        tableContainer.addEventListener("pointerup", handlePointerUp)
+        tableContainer.addEventListener("pointercancel", handlePointerCancel)
+
+        return () => {
+            tableContainer.removeEventListener("pointerdown", handlePointerDown)
+            tableContainer.removeEventListener("pointermove", handlePointerMove)
+            tableContainer.removeEventListener("pointerup", handlePointerUp)
+            tableContainer.removeEventListener("pointercancel", handlePointerCancel)
+            tableContainer.classList.remove("cursor-grabbing")
+        }
+    }, [])
 
     function toggleFilterValue(column: Column<RecordRow, unknown>, value: unknown) {
         const current = (column.getFilterValue() as unknown[] | undefined) ?? []
@@ -250,7 +324,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
             <div className="min-h-0 flex-1 rounded-md border">
                 <Table
-                    containerClassName="h-full overflow-y-auto overflow-x-hidden"
+                    containerClassName="h-full cursor-grab overflow-y-auto overflow-x-hidden"
                     containerRef={tableContainerRef}
                 >
                     <TableHeader>
