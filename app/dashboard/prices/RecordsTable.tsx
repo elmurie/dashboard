@@ -185,7 +185,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     }
 
     return (
-        <div className="space-y-3">
+        <div className="flex h-full min-h-0 flex-col gap-3">
             <div className="flex justify-end">
                 <Button
                     variant="outline"
@@ -197,8 +197,8 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Button>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
+            <div className="min-h-0 flex-1 rounded-md border">
+                <Table containerClassName="h-full overflow-auto">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -224,15 +224,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                     </TableRow>
                                 ))}
 
-                                {/* 👇 FILLER: mantiene la tabella "alta" quando ci sono poche righe */}
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={table.getAllColumns().length}
-                                        className="p-0"
-                                    >
-                                        <div className="h-[40vh]" />
-                                    </TableCell>
-                                </TableRow>
                             </>
                         ) : (
                             <TableRow>
@@ -245,7 +236,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Table>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t bg-background/95 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-muted-foreground">
                     {table.getFilteredRowModel().rows.length} record
                 </div>
