@@ -250,7 +250,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
             <div className="min-h-0 flex-1 rounded-md border">
                 <Table
-                    containerClassName="h-full overflow-y-auto"
+                    containerClassName="h-full overflow-y-auto overflow-x-hidden"
                     containerRef={tableContainerRef}
                 >
                     <TableHeader>
