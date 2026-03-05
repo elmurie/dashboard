@@ -72,12 +72,32 @@ function validatePrice(n: number): { ok: true } | { ok: false; reason: string } 
 
 export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
-        { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
+        {
+            accessorKey: "sede",
+            header: "Sede",
+            cell: ({ getValue }) => <TruncatedCellTooltip value={String(getValue() ?? "")} />,
+            filterFn: multiSelectFilter,
+        },
         { accessorKey: "id_medico", header: "ID Medico", filterFn: multiSelectFilter },
-        { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
+        {
+            accessorKey: "medico",
+            header: "Medico",
+            cell: ({ getValue }) => <TruncatedCellTooltip value={String(getValue() ?? "")} />,
+            filterFn: multiSelectFilter,
+        },
         { accessorKey: "id_prestazione", header: "ID Prestazione", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_cup", header: "Prestazione CUP", filterFn: multiSelectFilter },
+        {
+            accessorKey: "nome_prestazione_azienda",
+            header: "Prestazione (Azienda)",
+            cell: ({ getValue }) => <TruncatedCellTooltip value={String(getValue() ?? "")} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "nome_prestazione_cup",
+            header: "Prestazione CUP",
+            cell: ({ getValue }) => <TruncatedCellTooltip value={String(getValue() ?? "")} />,
+            filterFn: multiSelectFilter,
+        },
         {
             accessorKey: "prezzo",
             header: "Prezzo",
@@ -115,6 +135,46 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
             filterFn: multiSelectFilter,
         },
     ]
+}
+
+function TruncatedCellTooltip({ value }: { value: string }) {
+    const textRef = React.useRef<HTMLSpanElement | null>(null)
+    const [isTruncated, setIsTruncated] = React.useState(false)
+
+    React.useEffect(() => {
+        const element = textRef.current
+        if (!element) return
+
+        const checkTruncation = () => {
+            setIsTruncated(element.scrollWidth > element.clientWidth)
+        }
+
+        checkTruncation()
+
+        const resizeObserver = new ResizeObserver(checkTruncation)
+        resizeObserver.observe(element)
+
+        return () => {
+            resizeObserver.disconnect()
+        }
+    }, [value])
+
+    const content = (
+        <span ref={textRef} className="inline-block max-w-32 overflow-hidden text-ellipsis whitespace-nowrap align-middle">
+            {value}
+        </span>
+    )
+
+    if (!isTruncated) {
+        return content
+    }
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>{content}</TooltipTrigger>
+            <TooltipContent>{value}</TooltipContent>
+        </Tooltip>
+    )
 }
 
 function EditableInVenditaCell({
