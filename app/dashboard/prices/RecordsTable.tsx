@@ -32,12 +32,15 @@ function TruncatedCellText({ text }: { text: string }) {
         const element = textRef.current
         if (!element) return
 
+        const cell = element.closest("td")
+        if (!cell) return
+
         const updateTruncation = () => {
-            setIsTruncated(element.scrollWidth > element.clientWidth)
+            setIsTruncated(cell.scrollWidth > cell.clientWidth)
         }
 
         const resizeObserver = new ResizeObserver(updateTruncation)
-        resizeObserver.observe(element)
+        resizeObserver.observe(cell)
         updateTruncation()
 
         return () => {
@@ -45,27 +48,28 @@ function TruncatedCellText({ text }: { text: string }) {
         }
     }, [text])
 
-    const content = (
-        <span ref={textRef} className="block overflow-hidden text-ellipsis whitespace-nowrap">
-            {text}
-        </span>
-    )
-
-    if (!isTruncated) {
-        return content
-    }
-
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                {content}
+                <span className="block w-full">{text}</span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-sm break-words">
-                {text}
-            </TooltipContent>
+            {isTruncated ? (
+                <TooltipContent side="top" className="max-w-sm break-words">
+                    {text}
+                </TooltipContent>
+            ) : null}
         </Tooltip>
     )
 }
+
+const textOnlyColumnIds = new Set([
+    "sede",
+    "id_medico",
+    "medico",
+    "id_prestazione",
+    "nome_prestazione_azienda",
+    "nome_prestazione_cup",
+])
 
 async function updateRecord(
     id: string,
@@ -392,8 +396,8 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                             <TableCell key={cell.id} className="border-r border-border px-1 py-0.5 last:border-r-0">
                                                 {(() => {
                                                     const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext())
-                                                    if (typeof renderedCell === "string" || typeof renderedCell === "number") {
-                                                        return <TruncatedCellText text={String(renderedCell)} />
+                                                    if (textOnlyColumnIds.has(cell.column.id)) {
+                                                        return <TruncatedCellText text={String(cell.getValue() ?? "")} />
                                                     }
 
                                                     return renderedCell
