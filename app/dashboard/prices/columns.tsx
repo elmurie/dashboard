@@ -40,7 +40,8 @@ export type RecordRow = {
 }
 
 type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
-const PRICE_DEVIATION_PERCENT_THRESHOLD = 10
+const PRICE_DEVIATION_PERCENT_THRESHOLD_MEDIUM = 10
+const PRICE_DEVIATION_PERCENT_THRESHOLD_SEVERE = 50
 
 const multiSelectFilter: FilterFn<RecordRow> = (row, _id, value) => {
     if (!Array.isArray(value) || value.length === 0) return true
@@ -193,13 +194,15 @@ function EditablePriceCell({
     const [isTooltipOpen, setIsTooltipOpen] = React.useState(false)
     const [isPriceFieldFocused, setIsPriceFieldFocused] = React.useState(false)
 
-    const isPriceOutOfThreshold = React.useMemo(() => {
+    const deviationPercent = React.useMemo(() => {
         const parsed = normalizePriceInput(value)
-        if (parsed === null || typeof marketPrice !== "number" || marketPrice === 0) return false
+        if (parsed === null || typeof marketPrice !== "number" || marketPrice === 0) return null
 
-        const deviationPercent = (Math.abs(parsed - marketPrice) / marketPrice) * 100
-        return deviationPercent >= PRICE_DEVIATION_PERCENT_THRESHOLD
+        return (Math.abs(parsed - marketPrice) / marketPrice) * 100
     }, [marketPrice, value])
+
+    const isPriceOrange = deviationPercent !== null && deviationPercent >= PRICE_DEVIATION_PERCENT_THRESHOLD_MEDIUM
+    const isPriceRed = deviationPercent !== null && deviationPercent >= PRICE_DEVIATION_PERCENT_THRESHOLD_SEVERE
 
     React.useEffect(() => {
         // se la riga viene aggiornata dall'esterno, sincronizza
@@ -228,10 +231,14 @@ function EditablePriceCell({
 
         if (rounded === initialValue) return
 
-        if (typeof marketPrice === "number" && Math.abs(rounded - marketPrice) > 10) {
-            setConfirmPrice(rounded)
-            setIsMarketDialogOpen(true)
-            return
+        if (typeof marketPrice === "number" && marketPrice !== 0) {
+            const deviationPercent = (Math.abs(rounded - marketPrice) / marketPrice) * 100
+
+            if (deviationPercent >= PRICE_DEVIATION_PERCENT_THRESHOLD_MEDIUM) {
+                setConfirmPrice(rounded)
+                setIsMarketDialogOpen(true)
+                return
+            }
         }
 
         await persistPrice(rounded)
@@ -256,7 +263,8 @@ function EditablePriceCell({
                 <TooltipTrigger asChild>
                     <Input
                         className={cn("h-7 w-[60px] border-[var(--accent-bg)] border-2 px-1 text-right", {
-                            "border-orange-500": isPriceOutOfThreshold,
+                            "border-orange-500": isPriceOrange && !isPriceRed,
+                            "border-red-500": isPriceRed,
                         })}
                         inputMode="decimal"
                         value={value}
