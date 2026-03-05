@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
+import { Funnel } from "lucide-react"
 import { RecordRow, getColumns } from "./columns"
 
 async function updateRecord(
@@ -253,7 +253,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 }}
             >
                 <summary className={clsx('cursor-pointer list-none py-1 text-xs',{'active rounded-md border px-2':selected.length})}>
-                    {filterLabel} {selected.length ? `(${selected.length})` : ""}
+                    {filterLabel} {selected.length ? `(${selected.length})` : ""} <Funnel size={15} strokeWidth={1} className='inline-block align-bottom'/>
                 </summary>
 
                 <div className="absolute z-20 mt-1 w-56 rounded-md border bg-background p-2 shadow">
