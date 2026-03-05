@@ -288,7 +288,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                 const id = `${column.id}-${idx}-${String(value)}`
 
                                 return (
-                                    <label key={id} htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-muted">
+                                    <label key={id} htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-[var(--secondary-bg)]">
                                         <input
                                             id={id}
                                             type="checkbox"
@@ -343,7 +343,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                         {rows.length ? (
                             <>
                                 {rows.map((row) => (
-                                    <TableRow key={row.id} className="odd:bg-[var(--sidebar)] even:bg-background">
+                                    <TableRow key={row.id} className="odd:bg-gray-100 even:bg-background">
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell key={cell.id} className="border-r border-border px-1 py-0.5 last:border-r-0">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}

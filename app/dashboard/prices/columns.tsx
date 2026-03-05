@@ -73,11 +73,11 @@ function validatePrice(n: number): { ok: true } | { ok: false; reason: string } 
 export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
         { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
-        { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
         { accessorKey: "id_medico", header: "ID Medico", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_cup", header: "Prestazione", filterFn: multiSelectFilter },
+        { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
         { accessorKey: "id_prestazione", header: "ID Prestazione", filterFn: multiSelectFilter },
         { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
+        { accessorKey: "nome_prestazione_cup", header: "Prestazione CUP", filterFn: multiSelectFilter },
         {
             accessorKey: "prezzo",
             header: "Prezzo",
