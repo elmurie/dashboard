@@ -20,8 +20,52 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Funnel } from "lucide-react"
 import { RecordRow, getColumns } from "./columns"
+
+function TruncatedCellText({ text }: { text: string }) {
+    const textRef = React.useRef<HTMLSpanElement | null>(null)
+    const [isTruncated, setIsTruncated] = React.useState(false)
+
+    React.useEffect(() => {
+        const element = textRef.current
+        if (!element) return
+
+        const updateTruncation = () => {
+            setIsTruncated(element.scrollWidth > element.clientWidth)
+        }
+
+        const resizeObserver = new ResizeObserver(updateTruncation)
+        resizeObserver.observe(element)
+        updateTruncation()
+
+        return () => {
+            resizeObserver.disconnect()
+        }
+    }, [text])
+
+    const content = (
+        <span ref={textRef} className="block overflow-hidden text-ellipsis whitespace-nowrap">
+            {text}
+        </span>
+    )
+
+    if (!isTruncated) {
+        return content
+    }
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {content}
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-sm break-words">
+                {text}
+            </TooltipContent>
+        </Tooltip>
+    )
+}
 
 async function updateRecord(
     id: string,
@@ -346,7 +390,14 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                     <TableRow key={row.id} className="odd:bg-gray-100 even:bg-background">
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell key={cell.id} className="border-r border-border px-1 py-0.5 last:border-r-0">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                {(() => {
+                                                    const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext())
+                                                    if (typeof renderedCell === "string" || typeof renderedCell === "number") {
+                                                        return <TruncatedCellText text={String(renderedCell)} />
+                                                    }
+
+                                                    return renderedCell
+                                                })()}
                                             </TableCell>
                                         ))}
                                     </TableRow>
