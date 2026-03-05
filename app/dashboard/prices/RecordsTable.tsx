@@ -45,6 +45,15 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [openFilterColumnId, setOpenFilterColumnId] = React.useState<string | null>(null)
     const [filterSearch, setFilterSearch] = React.useState<Record<string, string>>({})
+    const tableContainerRef = React.useRef<HTMLDivElement | null>(null)
+    const bottomScrollbarRef = React.useRef<HTMLDivElement | null>(null)
+    const [bottomScrollWidth, setBottomScrollWidth] = React.useState(0)
+    const isSyncingScrollRef = React.useRef(false)
+
+    const isInteractiveElement = (target: EventTarget | null) => {
+        if (!(target instanceof Element)) return false
+        return Boolean(target.closest("button, a, input, select, textarea, summary, details, [role='button'], [contenteditable='true']"))
+    }
 
     const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch)), [company])
 
@@ -86,6 +95,122 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
             .filter((p) => p >= 0 && p < pageCount)
             .sort((a, b) => a - b)
     }, [pageCount, pagination.pageIndex])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        if (!tableContainer) return
+
+        const updateBottomScrollWidth = () => {
+            setBottomScrollWidth(tableContainer.scrollWidth)
+        }
+
+        const resizeObserver = new ResizeObserver(updateBottomScrollWidth)
+        resizeObserver.observe(tableContainer)
+        updateBottomScrollWidth()
+
+        return () => {
+            resizeObserver.disconnect()
+        }
+    }, [rows.length])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        const bottomScrollbar = bottomScrollbarRef.current
+
+        if (!tableContainer || !bottomScrollbar) return
+
+        const syncFromTable = () => {
+            if (isSyncingScrollRef.current) return
+            isSyncingScrollRef.current = true
+            bottomScrollbar.scrollLeft = tableContainer.scrollLeft
+            isSyncingScrollRef.current = false
+        }
+
+        const syncFromBottom = () => {
+            if (isSyncingScrollRef.current) return
+            isSyncingScrollRef.current = true
+            tableContainer.scrollLeft = bottomScrollbar.scrollLeft
+            isSyncingScrollRef.current = false
+        }
+
+        tableContainer.addEventListener("scroll", syncFromTable)
+        bottomScrollbar.addEventListener("scroll", syncFromBottom)
+        bottomScrollbar.scrollLeft = tableContainer.scrollLeft
+
+        return () => {
+            tableContainer.removeEventListener("scroll", syncFromTable)
+            bottomScrollbar.removeEventListener("scroll", syncFromBottom)
+        }
+    }, [rows.length])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        if (!tableContainer) return
+
+        const handleWheel = (event: WheelEvent) => {
+            const horizontalDelta = event.deltaX + (event.shiftKey ? event.deltaY : 0)
+            if (!horizontalDelta) return
+
+            tableContainer.scrollLeft += horizontalDelta
+            event.preventDefault()
+        }
+
+        tableContainer.addEventListener("wheel", handleWheel, { passive: false })
+
+        return () => {
+            tableContainer.removeEventListener("wheel", handleWheel)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        const tableContainer = tableContainerRef.current
+        if (!tableContainer) return
+
+        let isDragging = false
+        let startX = 0
+        let startScrollLeft = 0
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (event.button !== 0 || isInteractiveElement(event.target)) return
+
+            isDragging = true
+            startX = event.clientX
+            startScrollLeft = tableContainer.scrollLeft
+            tableContainer.classList.add("cursor-grabbing")
+            tableContainer.setPointerCapture(event.pointerId)
+        }
+
+        const handlePointerMove = (event: PointerEvent) => {
+            if (!isDragging) return
+            const deltaX = event.clientX - startX
+            tableContainer.scrollLeft = startScrollLeft - deltaX
+        }
+
+        const stopDragging = (pointerId?: number) => {
+            if (!isDragging) return
+            isDragging = false
+            tableContainer.classList.remove("cursor-grabbing")
+            if (pointerId !== undefined && tableContainer.hasPointerCapture(pointerId)) {
+                tableContainer.releasePointerCapture(pointerId)
+            }
+        }
+
+        const handlePointerUp = (event: PointerEvent) => stopDragging(event.pointerId)
+        const handlePointerCancel = (event: PointerEvent) => stopDragging(event.pointerId)
+
+        tableContainer.addEventListener("pointerdown", handlePointerDown)
+        tableContainer.addEventListener("pointermove", handlePointerMove)
+        tableContainer.addEventListener("pointerup", handlePointerUp)
+        tableContainer.addEventListener("pointercancel", handlePointerCancel)
+
+        return () => {
+            tableContainer.removeEventListener("pointerdown", handlePointerDown)
+            tableContainer.removeEventListener("pointermove", handlePointerMove)
+            tableContainer.removeEventListener("pointerup", handlePointerUp)
+            tableContainer.removeEventListener("pointercancel", handlePointerCancel)
+            tableContainer.classList.remove("cursor-grabbing")
+        }
+    }, [])
 
     function toggleFilterValue(column: Column<RecordRow, unknown>, value: unknown) {
         const current = (column.getFilterValue() as unknown[] | undefined) ?? []
@@ -185,7 +310,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     }
 
     return (
-        <div className="space-y-3">
+        <div className="flex h-full min-h-0 flex-col gap-3">
             <div className="flex justify-end">
                 <Button
                     variant="outline"
@@ -197,8 +322,11 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Button>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
+            <div className="min-h-0 flex-1 rounded-md border">
+                <Table
+                    containerClassName="h-full cursor-grab overflow-y-auto overflow-x-hidden"
+                    containerRef={tableContainerRef}
+                >
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -224,15 +352,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                     </TableRow>
                                 ))}
 
-                                {/* 👇 FILLER: mantiene la tabella "alta" quando ci sono poche righe */}
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={table.getAllColumns().length}
-                                        className="p-0"
-                                    >
-                                        <div className="h-[40vh]" />
-                                    </TableCell>
-                                </TableRow>
                             </>
                         ) : (
                             <TableRow>
@@ -245,57 +364,67 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Table>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm text-muted-foreground">
-                    {table.getFilteredRowModel().rows.length} record
+            <div className="sticky bottom-0 z-20 border-t bg-background/95 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <div
+                    ref={bottomScrollbarRef}
+                    className="mb-2 w-full overflow-x-auto overflow-y-hidden"
+                    aria-label="Scorrimento orizzontale tabella"
+                >
+                    <div className="h-1" style={{ width: `${bottomScrollWidth}px` }} />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Righe per pagina</span>
-                        <Select
-                            value={String(pagination.pageSize)}
-                            onValueChange={(value) => table.setPageSize(Number(value))}
-                        >
-                            <SelectTrigger className="h-8 w-[90px]" size="sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pageSizeOptions.map((size) => (
-                                    <SelectItem key={size} value={String(size)}>
-                                        {size}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-muted-foreground">
+                        {table.getFilteredRowModel().rows.length} record
                     </div>
 
-                    <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                        Prev
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="text-muted-foreground">Righe per pagina</span>
+                            <Select
+                                value={String(pagination.pageSize)}
+                                onValueChange={(value) => table.setPageSize(Number(value))}
+                            >
+                                <SelectTrigger className="h-8 w-[90px]" size="sm">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {pageSizeOptions.map((size) => (
+                                        <SelectItem key={size} value={String(size)}>
+                                            {size}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {pageButtons.map((pageIndex, idx) => {
-                        const previous = pageButtons[idx - 1]
-                        const showDots = previous !== undefined && pageIndex - previous > 1
+                        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                            Prev
+                        </Button>
 
-                        return (
-                            <React.Fragment key={`page-${pageIndex}`}>
-                                {showDots ? <span className="px-1 text-sm text-muted-foreground">…</span> : null}
-                                <Button
-                                    variant={pagination.pageIndex === pageIndex ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => table.setPageIndex(pageIndex)}
-                                    className="min-w-8"
-                                >
-                                    {pageIndex + 1}
-                                </Button>
-                            </React.Fragment>
-                        )
-                    })}
+                        {pageButtons.map((pageIndex, idx) => {
+                            const previous = pageButtons[idx - 1]
+                            const showDots = previous !== undefined && pageIndex - previous > 1
 
-                    <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                        Next
-                    </Button>
+                            return (
+                                <React.Fragment key={`page-${pageIndex}`}>
+                                    {showDots ? <span className="px-1 text-sm text-muted-foreground">…</span> : null}
+                                    <Button
+                                        variant={pagination.pageIndex === pageIndex ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => table.setPageIndex(pageIndex)}
+                                        className="min-w-8"
+                                    >
+                                        {pageIndex + 1}
+                                    </Button>
+                                </React.Fragment>
+                            )
+                        })}
+
+                        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                            Next
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

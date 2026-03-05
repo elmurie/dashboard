@@ -5,12 +5,12 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar"
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <div className="min-h-dvh w-full flex overflow-hidden bg-background">
+      <div className="flex h-dvh w-full overflow-hidden bg-background">
         {/* Sidebar */}
         <AppSidebar />
 
         {/* Main area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <SidebarTrigger />
           {children}
         </div>
