@@ -78,7 +78,16 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
         { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
         { accessorKey: "id_prestazione", header: "ID Prestazione", filterFn: multiSelectFilter },
         { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_cup", header: "Prestazione CUP", filterFn: multiSelectFilter },
+        { accessorKey: "nome_prestazione_cup",
+            header: "Prestazione CUP",
+            cell: ({ row }) => {
+                const r = row.original
+                console.log(r.nome_prestazione_cup);
+                return (
+                    <span title={r.nome_prestazione_cup}>{r.nome_prestazione_cup}</span> 
+                )
+            },
+            filterFn: multiSelectFilter },
         {
             accessorKey: "prezzo",
             header: "Prezzo",
