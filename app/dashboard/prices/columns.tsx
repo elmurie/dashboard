@@ -83,7 +83,7 @@ function TextTooltipCell({ value }: { value: string }) {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <span className="block max-w-[320px] truncate">{value}</span>
+                <span className="block truncate">{value}</span>
             </TooltipTrigger>
             <TooltipContent side="top">{value}</TooltipContent>
         </Tooltip>
@@ -97,28 +97,28 @@ export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
             header: "Sede",
             cell: ({ row }) => <TextTooltipCell value={row.original.sede} />,
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-36 min-w-36 max-w-36" },
+            meta: { widthClassName: "w-18 min-w-18 max-w-18" },
         },
         {
             accessorKey: "id_medico",
             header: "ID Medico",
             cell: ({ row }) => <TextTooltipCell value={row.original.id_medico} />,
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
+            meta: { widthClassName: "w-12 min-w-12 max-w-12" },
         },
         {
             accessorKey: "medico",
             header: "Medico",
             cell: ({ row }) => <TextTooltipCell value={row.original.medico} />,
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-44 min-w-44 max-w-44" },
+            meta: { widthClassName: "w-18 min-w-18 max-w-18" },
         },
         {
             accessorKey: "id_prestazione",
             header: "ID Prestazione",
             cell: ({ row }) => <TextTooltipCell value={row.original.id_prestazione} />,
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
+            meta: { widthClassName: "w-12 min-w-12 max-w-12" },
         },
         {
             accessorKey: "nome_prestazione_azienda",
@@ -153,7 +153,7 @@ export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
                 )
             },
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
+            meta: { widthClassName: "w-8 min-w-8 max-w-8" },
         },
         {
             accessorKey: "in_vendita",
@@ -170,7 +170,7 @@ export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
                 />
             },
             filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
+            meta: { widthClassName: "w-10 min-w-10 max-w-10" },
         },
     ]
 }
