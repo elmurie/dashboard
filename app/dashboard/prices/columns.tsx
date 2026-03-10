@@ -82,9 +82,15 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
             header: "Prestazione CUP",
             cell: ({ row }) => {
                 const r = row.original
-                console.log(r.nome_prestazione_cup);
                 return (
-                    <span title={r.nome_prestazione_cup}>{r.nome_prestazione_cup}</span> 
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="block max-w-[320px] truncate">{r.nome_prestazione_cup}</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            {r.nome_prestazione_cup}
+                        </TooltipContent>
+                    </Tooltip>
                 )
             },
             filterFn: multiSelectFilter },
