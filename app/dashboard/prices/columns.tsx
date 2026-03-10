@@ -71,23 +71,55 @@ function validatePrice(n: number): { ok: true } | { ok: false; reason: string } 
     return { ok: true }
 }
 
+function TextTooltipCell({ value }: { value: string }) {
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <span className="block max-w-[320px] truncate">{value}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top">{value}</TooltipContent>
+        </Tooltip>
+    )
+}
+
 export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
     return [
-        { accessorKey: "sede", header: "Sede", filterFn: multiSelectFilter },
-        { accessorKey: "id_medico", header: "ID Medico", filterFn: multiSelectFilter },
-        { accessorKey: "medico", header: "Medico", filterFn: multiSelectFilter },
-        { accessorKey: "id_prestazione", header: "ID Prestazione", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_azienda", header: "Prestazione (Azienda)", filterFn: multiSelectFilter },
-        { accessorKey: "nome_prestazione_cup",
+        {
+            accessorKey: "sede",
+            header: "Sede",
+            cell: ({ row }) => <TextTooltipCell value={row.original.sede} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "id_medico",
+            header: "ID Medico",
+            cell: ({ row }) => <TextTooltipCell value={row.original.id_medico} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "medico",
+            header: "Medico",
+            cell: ({ row }) => <TextTooltipCell value={row.original.medico} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "id_prestazione",
+            header: "ID Prestazione",
+            cell: ({ row }) => <TextTooltipCell value={row.original.id_prestazione} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "nome_prestazione_azienda",
+            header: "Prestazione (Azienda)",
+            cell: ({ row }) => <TextTooltipCell value={row.original.nome_prestazione_azienda} />,
+            filterFn: multiSelectFilter,
+        },
+        {
+            accessorKey: "nome_prestazione_cup",
             header: "Prestazione CUP",
-            cell: ({ row }) => {
-                const r = row.original
-                console.log(r.nome_prestazione_cup);
-                return (
-                    <span title={r.nome_prestazione_cup}>{r.nome_prestazione_cup}</span> 
-                )
-            },
-            filterFn: multiSelectFilter },
+            cell: ({ row }) => <TextTooltipCell value={row.original.nome_prestazione_cup} />,
+            filterFn: multiSelectFilter,
+        },
         {
             accessorKey: "prezzo",
             header: "Prezzo",
