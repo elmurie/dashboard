@@ -331,14 +331,14 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
-                                    const isPrestazioneIdColumn = header.column.id === "id_prestazione"
+                                    const widthClassName = (header.column.columnDef.meta as { widthClassName?: string } | undefined)?.widthClassName
 
                                     return (
                                         <TableHead
                                             key={header.id}
                                             className={clsx(
                                                 "h-7 border-r border-border px-1 py-0 last:border-r-0",
-                                                isPrestazioneIdColumn && "w-24 min-w-24 max-w-24"
+                                                widthClassName
                                             )}
                                         >
                                             {header.isPlaceholder ? null : renderColumnFilter(header.column)}
@@ -355,14 +355,14 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                 {rows.map((row) => (
                                     <TableRow key={row.id} className="odd:bg-gray-100 even:bg-background">
                                         {row.getVisibleCells().map((cell) => {
-                                            const isPrestazioneIdColumn = cell.column.id === "id_prestazione"
+                                            const widthClassName = (cell.column.columnDef.meta as { widthClassName?: string } | undefined)?.widthClassName
 
                                             return (
                                                 <TableCell
                                                     key={cell.id}
                                                     className={clsx(
                                                         "border-r border-border px-1 py-0.5 last:border-r-0",
-                                                        isPrestazioneIdColumn && "w-24 min-w-24 max-w-24"
+                                                        widthClassName
                                                     )}
                                                 >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
