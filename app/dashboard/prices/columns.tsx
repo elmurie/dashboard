@@ -22,6 +22,14 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
+type ColumnMeta = {
+    widthClassName: string
+}
+
+type RecordsColumnDef = ColumnDef<RecordRow> & {
+    meta?: ColumnMeta
+}
+
 export type RecordRow = {
     _id: string
     id_sede: string
@@ -82,43 +90,49 @@ function TextTooltipCell({ value }: { value: string }) {
     )
 }
 
-export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
+export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
     return [
         {
             accessorKey: "sede",
             header: "Sede",
             cell: ({ row }) => <TextTooltipCell value={row.original.sede} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-36 min-w-36 max-w-36" },
         },
         {
             accessorKey: "id_medico",
             header: "ID Medico",
             cell: ({ row }) => <TextTooltipCell value={row.original.id_medico} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
         },
         {
             accessorKey: "medico",
             header: "Medico",
             cell: ({ row }) => <TextTooltipCell value={row.original.medico} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-44 min-w-44 max-w-44" },
         },
         {
             accessorKey: "id_prestazione",
             header: "ID Prestazione",
             cell: ({ row }) => <TextTooltipCell value={row.original.id_prestazione} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
         },
         {
             accessorKey: "nome_prestazione_azienda",
             header: "Prestazione (Azienda)",
             cell: ({ row }) => <TextTooltipCell value={row.original.nome_prestazione_azienda} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-56 min-w-56 max-w-56" },
         },
         {
             accessorKey: "nome_prestazione_cup",
             header: "Prestazione CUP",
             cell: ({ row }) => <TextTooltipCell value={row.original.nome_prestazione_cup} />,
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-56 min-w-56 max-w-56" },
         },
         {
             accessorKey: "prezzo",
@@ -139,6 +153,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                 )
             },
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
         },
         {
             accessorKey: "in_vendita",
@@ -155,6 +170,7 @@ export function getColumns(updateRecord: UpdateFn): ColumnDef<RecordRow>[] {
                 />
             },
             filterFn: multiSelectFilter,
+            meta: { widthClassName: "w-32 min-w-32 max-w-32" },
         },
     ]
 }
