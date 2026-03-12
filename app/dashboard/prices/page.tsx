@@ -1,10 +1,13 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
 import { RecordRow } from "./columns"
 import { RecordsTable } from "./RecordsTable"
+
+const LOGIN_REDIRECT_DELAY_MS = 5000
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -12,6 +15,7 @@ export default function Page() {
   const company = normalizeCompany(searchParams.get("company"))
   const [data, setData] = useState<RecordRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!searchParams.get("company")) {
@@ -22,13 +26,21 @@ export default function Page() {
     let mounted = true
 
     Promise.resolve().then(() => {
-      if (mounted) setLoading(true)
+      if (mounted) {
+        setLoading(true)
+        setAuthError(null)
+      }
     })
+
+    let unauthorized = false
 
     fetch(`/api/records?company=${encodeURIComponent(company)}`, { cache: "no-store" })
       .then(async (res) => {
         if (res.status === 401) {
-          router.replace("/auth/login")
+          unauthorized = true
+          if (mounted) {
+            setAuthError("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+          }
           return [] as RecordRow[]
         }
 
@@ -39,7 +51,7 @@ export default function Page() {
         return (await res.json()) as RecordRow[]
       })
       .then((rows) => {
-        if (!mounted) return
+        if (!mounted || unauthorized) return
         setData(rows)
       })
       .finally(() => {
@@ -52,8 +64,25 @@ export default function Page() {
     }
   }, [company, router, searchParams])
 
-  if (loading) {
-    return <div className="p-4 text-sm text-muted-foreground">Caricamento prezzi...</div>
+  useEffect(() => {
+    if (!authError) return
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace("/auth/login")
+    }, LOGIN_REDIRECT_DELAY_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [authError, router])
+
+  if (loading || authError) {
+    return (
+      <div className="flex items-center gap-3 p-4 text-sm text-muted-foreground">
+        <Image src="/spinner.png" alt="Loading" width={18} height={18} className="animate-spin" />
+        <span>{authError ?? "Caricamento prezzi..."}</span>
+      </div>
+    )
   }
 
   return (
