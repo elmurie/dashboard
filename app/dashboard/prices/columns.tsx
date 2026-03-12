@@ -155,23 +155,23 @@ export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
             filterFn: multiSelectFilter,
             meta: { widthClassName: "w-8 min-w-8 max-w-8" },
         },
-        {
-            accessorKey: "in_vendita",
-            header: "In vendita",
-            cell: ({ row }) => {
-                const r = row.original
+        // {
+        //     accessorKey: "in_vendita",
+        //     header: "In vendita",
+        //     cell: ({ row }) => {
+        //         const r = row.original
 
-                return <EditableInVenditaCell
-                    initialValue={r.in_vendita}
-                    onCommit={async (next) => {
-                        if (next === r.in_vendita) return
-                        await updateRecord(r._id, { in_vendita: next })
-                    }}
-                />
-            },
-            filterFn: multiSelectFilter,
-            meta: { widthClassName: "w-10 min-w-10 max-w-10" },
-        },
+        //         return <EditableInVenditaCell
+        //             initialValue={r.in_vendita}
+        //             onCommit={async (next) => {
+        //                 if (next === r.in_vendita) return
+        //                 await updateRecord(r._id, { in_vendita: next })
+        //             }}
+        //         />
+        //     },
+        //     filterFn: multiSelectFilter,
+        //     meta: { widthClassName: "w-10 min-w-10 max-w-10" },
+        // },
     ]
 }
 
