@@ -331,7 +331,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                         <TableHead
                                             key={header.id}
                                             className={clsx(
-                                                "h-7 border-r border-border px-1 py-0 last:border-r-0",
+                                                "sticky top-0 z-20 h-7 border-r border-border bg-background px-1 py-0 last:border-r-0",
                                                 widthClassName
                                             )}
                                         >
