@@ -3,9 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import * as React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 import { sidebarLinks } from "@/components/sidebar/sidebar-links"
-import { COMPANIES, normalizeCompany } from "@/lib/companies"
+import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
 import { cn } from "@/lib/utils"
 
 const navigationItems = sidebarLinks.flatMap((group) => group.items)
@@ -15,12 +17,40 @@ export function TopHeader() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
+  const [companies, setCompanies] = React.useState<string[]>([DEFAULT_COMPANY])
+
+  React.useEffect(() => {
+    let mounted = true
+
+    fetch("/api/companies", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Unauthorized")
+        return (await res.json()) as string[]
+      })
+      .then((data) => {
+        if (!mounted || !Array.isArray(data) || data.length === 0) return
+        setCompanies(data)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setCompanies([DEFAULT_COMPANY])
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const withCompany = (href: string) => `${href}?company=${company}`
 
   const onCompanyChange = (nextCompany: string) => {
     if (nextCompany === company) return
     router.push(`${pathname}?company=${nextCompany}`)
+  }
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.push("/auth/login")
   }
 
   return (
@@ -35,7 +65,7 @@ export function TopHeader() {
             <SelectValue placeholder="Seleziona company" />
           </SelectTrigger>
           <SelectContent>
-            {COMPANIES.map((companyName) => (
+            {companies.map((companyName) => (
               <SelectItem key={companyName} value={companyName}>
                 {companyName}
               </SelectItem>
@@ -43,7 +73,7 @@ export function TopHeader() {
           </SelectContent>
         </Select>
 
-        <nav className="flex min-w-0 items-center gap-1 overflow-x-auto">
+        <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {navigationItems.map((item) => {
             const href = withCompany(item.href)
             const isActive = pathname === item.href
@@ -62,6 +92,10 @@ export function TopHeader() {
             )
           })}
         </nav>
+
+        <Button variant="outline" size="sm" onClick={logout}>
+          Logout
+        </Button>
       </div>
     </header>
   )
