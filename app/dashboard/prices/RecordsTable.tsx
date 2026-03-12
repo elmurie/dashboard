@@ -318,7 +318,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         <div className="flex h-full min-h-0 flex-col gap-3">
             <div className="min-h-0 flex-1 rounded-md border">
                 <Table
-                    containerClassName="h-full cursor-grab overflow-y-auto overflow-x-hidden"
+                    containerClassName="h-full cursor-grab overflow-x-hidden"
                     containerRef={tableContainerRef}
                 >
                     <TableHeader>
@@ -331,7 +331,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                                         <TableHead
                                             key={header.id}
                                             className={clsx(
-                                                "sticky top-0 z-20 h-7 border-r border-border bg-background px-1 py-0 last:border-r-0",
+                                                "sticky top-14 z-30 h-7 border-r border-border bg-background px-1 py-0 last:border-r-0",
                                                 widthClassName
                                             )}
                                         >
