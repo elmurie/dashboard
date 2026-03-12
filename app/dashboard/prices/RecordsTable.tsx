@@ -285,18 +285,23 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                     <div className="max-h-56 space-y-1 overflow-auto pr-1">
                         {filteredValues.map((value, idx) => {
                                 const checked = selected.some((item) => item === value)
-                                const id = `${column.id}-${idx}-${String(value)}`
 
                                 return (
-                                    <label key={id} htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-[var(--secondary-bg)]">
+                                    <button
+                                        key={`${column.id}-${idx}-${String(value)}`}
+                                        type="button"
+                                        className="flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1 text-left text-xs hover:bg-[var(--secondary-bg)]"
+                                        onClick={() => toggleFilterValue(column, value)}
+                                    >
                                         <input
-                                            id={id}
                                             type="checkbox"
                                             checked={checked}
-                                            onChange={() => toggleFilterValue(column, value)}
+                                            readOnly
+                                            tabIndex={-1}
+                                            aria-hidden="true"
                                         />
                                         <span className="truncate">{String(value)}</span>
-                                    </label>
+                                    </button>
                                 )
                             })}
 
