@@ -316,17 +316,6 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
 
     return (
         <div className="flex h-full min-h-0 flex-col gap-3">
-            <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        setColumnFilters([])
-                    }}
-                >
-                    Reset Filtri
-                </Button>
-            </div>
-
             <div className="min-h-0 flex-1 rounded-md border">
                 <Table
                     containerClassName="h-full cursor-grab overflow-y-auto overflow-x-hidden"
