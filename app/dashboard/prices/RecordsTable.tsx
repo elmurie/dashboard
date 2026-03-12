@@ -315,13 +315,13 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
     }
 
     return (
-        <div className="flex h-full min-h-0 flex-col gap-3">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 rounded-md border">
                 <Table
                     containerClassName="h-full cursor-grab overflow-y-auto overflow-x-hidden"
                     containerRef={tableContainerRef}
                 >
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
@@ -378,7 +378,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
                 </Table>
             </div>
 
-            <div className="sticky bottom-0 z-20 border-t bg-background/95 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <div className="border-t bg-background/95 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
                 <div
                     ref={bottomScrollbarRef}
                     className="mb-2 w-full overflow-x-auto overflow-y-hidden"
