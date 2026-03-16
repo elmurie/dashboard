@@ -49,7 +49,7 @@ export type RecordRow = {
 
 type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
 const PRICE_DEVIATION_PERCENT_THRESHOLD_MEDIUM = 10
-const PRICE_DEVIATION_PERCENT_THRESHOLD_SEVERE = 50
+const PRICE_DEVIATION_PERCENT_THRESHOLD_SEVERE = 20
 
 const multiSelectFilter: FilterFn<RecordRow> = (row, _id, value) => {
     if (!Array.isArray(value) || value.length === 0) return true

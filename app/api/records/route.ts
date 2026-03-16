@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
-import { readFile } from "node:fs/promises"
-import path from "node:path"
-import { Company, normalizeCompany } from "@/lib/companies"
-
-type RecordsByCompany<T> = Record<Company, T[]>
+import { fetchSapp, setSessionCookies } from "@/lib/sapp-api"
 
 export async function GET(req: NextRequest) {
-  const company = normalizeCompany(req.nextUrl.searchParams.get("company"))
+  try {
+    const company = req.nextUrl.searchParams.get("company")
 
-  const filePath = path.join(process.cwd(), "records.json")
-  const raw = await readFile(filePath, "utf8")
-  const data = JSON.parse(raw) as RecordsByCompany<unknown>
+    if (!company) {
+      return NextResponse.json({ error: "Missing company" }, { status: 400 })
+    }
 
-  return NextResponse.json(data[company] ?? [])
+    const { payload, refreshed } = await fetchSapp<unknown[]>(`/prices/list?company=${encodeURIComponent(company)}`)
+    const response = NextResponse.json(payload.data)
+
+    if (refreshed) {
+      await setSessionCookies(response, refreshed)
+    }
+
+    return response
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 }
