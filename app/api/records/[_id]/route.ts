@@ -22,6 +22,64 @@ type Row = {
 
 type RecordsByCompany = Record<Company, Row[]>
 
+const SAPP_BASE_URL = process.env.SAPP_BASE_URL ?? "https://api.cupsolidale.it/api/v1/sapp"
+const ACCESS_TOKEN_ENV_KEYS = [
+  "SAPP_ACCESS_TOKEN",
+  "CUPSOLIDALE_ACCESS_TOKEN",
+  "SAPP_BEARER_TOKEN",
+] as const
+
+function getAuthorizationHeader(req: NextRequest): string | null {
+  const requestAuthorization = req.headers.get("authorization")?.trim()
+  if (requestAuthorization) return requestAuthorization
+
+  for (const key of ACCESS_TOKEN_ENV_KEYS) {
+    const token = process.env[key]?.trim()
+    if (!token) continue
+    return token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`
+  }
+
+  return null
+}
+
+async function updateRemotePrice({
+  _id,
+  company,
+  prezzo,
+  authorization,
+}: {
+  _id: string
+  company: Company
+  prezzo: number
+  authorization: string
+}) {
+  const response = await fetch(`${SAPP_BASE_URL}/prices/change`, {
+    method: "POST",
+    headers: {
+      Authorization: authorization,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ _id, price: prezzo, company }),
+    cache: "no-store",
+  })
+
+  if (response.ok) return
+
+  const contentType = response.headers.get("content-type") ?? ""
+  const payload = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => null)
+
+  return NextResponse.json(
+    {
+      error: "Remote price update failed",
+      status: response.status,
+      payload,
+    },
+    { status: response.status }
+  )
+}
+
 export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ _id: string }> }
@@ -40,6 +98,27 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid prezzo" }, { status: 400 })
     }
     patch.prezzo = Math.round(n * 100) / 100
+  }
+
+  if (typeof patch.prezzo === "number") {
+    const authorization = getAuthorizationHeader(req)
+    if (!authorization) {
+      return NextResponse.json(
+        { error: "Missing Authorization header for remote price update" },
+        { status: 401 }
+      )
+    }
+
+    const remoteErrorResponse = await updateRemotePrice({
+      _id,
+      company,
+      prezzo: patch.prezzo,
+      authorization,
+    })
+
+    if (remoteErrorResponse) {
+      return remoteErrorResponse
+    }
   }
 
   const filePath = path.join(process.cwd(), "records.json")
