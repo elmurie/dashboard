@@ -1,7 +1,17 @@
 import * as React from "react"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { TopHeader } from "@/components/dashboard/top-header"
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies()
+  const accessToken = cookieStore.get("sapp_access_token")?.value
+  const refreshToken = cookieStore.get("sapp_refresh_token")?.value
+
+  if (!accessToken && !refreshToken) {
+    redirect("/auth/login")
+  }
+
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-background">
       <TopHeader />

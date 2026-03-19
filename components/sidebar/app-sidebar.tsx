@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   Sidebar,
@@ -18,13 +19,25 @@ import { sidebarLinks } from "./sidebar-links"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { COMPANIES, normalizeCompany } from "@/lib/companies"
+import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
+  const [companies, setCompanies] = React.useState<string[]>([DEFAULT_COMPANY])
+
+  React.useEffect(() => {
+    fetch("/api/companies", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return [DEFAULT_COMPANY]
+        const data = (await res.json()) as string[]
+        return Array.isArray(data) && data.length ? data : [DEFAULT_COMPANY]
+      })
+      .then(setCompanies)
+      .catch(() => setCompanies([DEFAULT_COMPANY]))
+  }, [])
 
   const withCompany = (href: string) => `${href}?company=${company}`
 
@@ -53,7 +66,7 @@ export function AppSidebar() {
               <SelectValue placeholder="Seleziona company" />
             </SelectTrigger>
             <SelectContent>
-              {COMPANIES.map((companyName) => (
+              {companies.map((companyName) => (
                 <SelectItem key={companyName} value={companyName}>
                   {companyName}
                 </SelectItem>
@@ -64,8 +77,6 @@ export function AppSidebar() {
 
         {sidebarLinks.map((group) => (
           <SidebarGroup key={group.label}>
-            {/* <SidebarGroupLabel>{group.label}</SidebarGroupLabel> */}
-
             <SidebarMenu>
               {group.items.map((item) => {
                 const href = withCompany(item.href)
@@ -87,7 +98,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <Link href="/">
+        <Link href="/auth/login">
           <Button>
             <LogOut className="mr-2 h-4 w-4" />
             Log Out

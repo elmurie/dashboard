@@ -1,15 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { SappApiError, fetchSapp, setSessionCookies } from "@/lib/sapp-api"
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const company = req.nextUrl.searchParams.get("company")
-
-    if (!company) {
-      return NextResponse.json({ error: "Missing company" }, { status: 400 })
-    }
-
-    const { payload, refreshed } = await fetchSapp<unknown[]>(`/prices/list?company=${encodeURIComponent(company)}`)
+    const { payload, refreshed } = await fetchSapp<string[]>("/companies/list")
     const response = NextResponse.json(payload.data)
 
     if (refreshed) {
