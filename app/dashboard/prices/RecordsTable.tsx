@@ -23,15 +23,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Funnel } from "lucide-react"
 import { RecordRow, getColumns } from "./columns"
 
+const RECORDS_API_BASE_URL =
+    process.env.NEXT_PUBLIC_RECORDS_API_BASE_URL ?? "https://sandboxapi.cupsolidale.it"
+
 async function updateRecord(
     id: string,
     company: string,
     patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>
 ) {
-    const res = await fetch(`/api/records/${id}`, {
+    const res = await fetch(`${RECORDS_API_BASE_URL}/api/records`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...patch, company }),
+        body: JSON.stringify({ _id: id, ...patch, company }),
     })
     if (!res.ok) throw new Error("PATCH failed")
 }
