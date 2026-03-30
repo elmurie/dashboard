@@ -28,10 +28,10 @@ async function updateRecord(
     company: string,
     patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>
 ) {
-    const res = await fetch(`/api/records/${id}`, {
+    const res = await fetch(`/api/records`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...patch, company }),
+        body: JSON.stringify({ _id: id, ...patch, company }),
     })
     if (!res.ok) throw new Error("PATCH failed")
 }
