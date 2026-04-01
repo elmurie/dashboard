@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const patch = (await req.json()) as { _id?: string; prezzo?: number; company?: string }
+    const patch = (await req.json()) as { _id?: string; prezzo?: number; price?: number; company?: string }
 
     if (!patch.company) {
       return NextResponse.json({ error: "Missing company" }, { status: 400 })
@@ -38,14 +38,16 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Missing _id" }, { status: 400 })
     }
 
-    if (typeof patch.prezzo !== "number" || !Number.isFinite(patch.prezzo) || patch.prezzo < 0) {
-      return NextResponse.json({ error: "Invalid prezzo" }, { status: 400 })
+    const nextPrice = patch.price ?? patch.prezzo
+
+    if (typeof nextPrice !== "number" || !Number.isFinite(nextPrice) || nextPrice < 0) {
+      return NextResponse.json({ error: "Invalid price" }, { status: 400 })
     }
 
     const { payload, refreshed } = await fetchSapp(`/prices/change`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ _id: patch._id, price: patch.prezzo, company: patch.company }),
+      body: JSON.stringify({ _id: patch._id, price: nextPrice, company: patch.company }),
     })
 
     const response = NextResponse.json(payload.data)
