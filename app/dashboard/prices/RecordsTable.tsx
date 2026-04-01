@@ -28,12 +28,27 @@ async function updateRecord(
     company: string,
     patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>
 ) {
-    const res = await fetch("/api/records", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+    const tokenResponse = await fetch("/api/auth/access-token", {
+        method: "GET",
         credentials: "include",
-        body: JSON.stringify({ _id: id, ...patch, company }),
     })
+    if (!tokenResponse.ok) throw new Error("Missing access token")
+
+    const { accessToken } = (await tokenResponse.json()) as { accessToken?: string }
+    if (!accessToken) throw new Error("Missing access token")
+
+    const price = patch.prezzo
+    if (typeof price !== "number") throw new Error("Invalid price")
+
+    const res = await fetch("https://sandboxapi.cupsolidale.it/api/v1/sapp/prices/change", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ _id: id, company, price }),
+    })
+
     if (!res.ok) throw new Error("PATCH failed")
 }
 
