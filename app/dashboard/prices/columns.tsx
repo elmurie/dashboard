@@ -90,7 +90,7 @@ function TextTooltipCell({ value }: { value: string }) {
     )
 }
 
-export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
+export function getColumns(updateRecord: UpdateFn, canChangePrice: boolean): RecordsColumnDef[] {
     return [
         {
             accessorKey: "sede",
@@ -149,6 +149,7 @@ export function getColumns(updateRecord: UpdateFn): RecordsColumnDef[] {
                         onCommit={async (next) => {
                             await updateRecord(r._id, { prezzo: next })
                         }}
+                        readOnly={!canChangePrice}
                     />
                 )
             },
@@ -235,12 +236,14 @@ function EditablePriceCell({
     marketPrice,
     marketMaxPrice,
     onCommit,
+    readOnly,
 }: {
     initialValue: number
     marketMinPrice?: number
     marketPrice?: number
     marketMaxPrice?: number
     onCommit: (next: number) => Promise<void>
+    readOnly?: boolean
 }) {
     const [value, setValue] = React.useState(String(initialValue))
     const [saving, setSaving] = React.useState(false)
@@ -268,6 +271,11 @@ function EditablePriceCell({
 
     async function commit() {
         setError(null)
+
+        if (readOnly) {
+            setValue(String(initialValue))
+            return
+        }
 
         const parsed = normalizePriceInput(value)
         if (parsed === null) {
@@ -322,10 +330,11 @@ function EditablePriceCell({
                         className={cn("h-7 w-[60px] border-[var(--accent-bg)] border-2 px-1 text-right", {
                             "border-orange-500": isPriceOrange && !isPriceRed,
                             "border-red-500": isPriceRed,
+                            "bg-muted text-muted-foreground cursor-not-allowed": readOnly,
                         })}
                         inputMode="decimal"
                         value={value}
-                        disabled={saving}
+                        disabled={saving || readOnly}
                         aria-invalid={Boolean(error)}
                         onChange={(e) => setValue(e.target.value)}
                         onMouseEnter={() => setIsTooltipOpen(true)}

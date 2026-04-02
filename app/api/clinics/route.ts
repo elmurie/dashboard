@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server"
-import { CompanySettings, normalizeCompaniesResponse } from "@/lib/companies"
 import { SappApiError, fetchSapp, setSessionCookies } from "@/lib/sapp-api"
 
-export async function GET() {
+type Clinic = {
+  _id: string
+  name: string
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const company = searchParams.get("company")
+
+  if (!company) {
+    return NextResponse.json({ error: "Missing company" }, { status: 400 })
+  }
+
   try {
-    const { payload, refreshed } = await fetchSapp<CompanySettings[] | string[]>("/companies/list")
-    const companies = normalizeCompaniesResponse(payload.data)
-    const response = NextResponse.json(companies)
+    const { payload, refreshed } = await fetchSapp<Clinic[]>(`/clinics/list?company=${encodeURIComponent(company)}`)
+    const response = NextResponse.json(payload.data)
 
     if (refreshed) {
       await setSessionCookies(response, refreshed)

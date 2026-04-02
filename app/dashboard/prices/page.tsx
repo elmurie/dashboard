@@ -3,11 +3,17 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
+import { CompanySettings, DEFAULT_COMPANY, normalizeCompaniesResponse, normalizeCompany } from "@/lib/companies"
 import { RecordRow } from "./columns"
 import { RecordsTable } from "./RecordsTable"
 
 const LOGIN_REDIRECT_DELAY_MS = 5000
+
+function getCanChangePriceForCompany(companies: CompanySettings[], company: string): boolean {
+  const match = companies.find((entry) => entry.company === company)
+  if (!match) return true
+  return match.can_change_price
+}
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -16,6 +22,7 @@ export default function Page() {
   const [data, setData] = useState<RecordRow[]>([])
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [canChangePrice, setCanChangePrice] = useState(true)
 
   useEffect(() => {
     if (!searchParams.get("company")) {
@@ -34,7 +41,7 @@ export default function Page() {
 
     let unauthorized = false
 
-    fetch(`/api/records?company=${encodeURIComponent(company)}`, { cache: "no-store" })
+    const recordsPromise = fetch(`/api/records?company=${encodeURIComponent(company)}`, { cache: "no-store" })
       .then(async (res) => {
         if (res.status === 401) {
           unauthorized = true
@@ -50,9 +57,19 @@ export default function Page() {
 
         return (await res.json()) as RecordRow[]
       })
-      .then((rows) => {
+
+    const companiesPromise = fetch("/api/companies", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return normalizeCompaniesResponse([])
+        return normalizeCompaniesResponse(await res.json())
+      })
+      .catch(() => normalizeCompaniesResponse([]))
+
+    Promise.all([recordsPromise, companiesPromise])
+      .then(([rows, companies]) => {
         if (!mounted || unauthorized) return
         setData(rows)
+        setCanChangePrice(getCanChangePriceForCompany(companies, company))
       })
       .finally(() => {
         if (!mounted) return
@@ -89,7 +106,7 @@ export default function Page() {
     <div className="flex min-h-0 w-full flex-1 flex-col">
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 w-full flex-1 flex-col px-2 pb-2">
-          <RecordsTable data={data} />
+          <RecordsTable data={data} canChangePrice={canChangePrice} />
         </div>
       </main>
     </div>

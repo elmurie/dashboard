@@ -20,7 +20,7 @@ export const sidebarLinks = [
                 icon: Euro,
             },
             {
-                title: "Agenda",
+                title: "Chiusure",
                 href: "/dashboard/slots",
                 icon: Calendar,
             },

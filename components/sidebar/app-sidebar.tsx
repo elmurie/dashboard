@@ -19,24 +19,23 @@ import { sidebarLinks } from "./sidebar-links"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
+import { CompanySettings, DEFAULT_COMPANY, normalizeCompaniesResponse, normalizeCompany } from "@/lib/companies"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
-  const [companies, setCompanies] = React.useState<string[]>([DEFAULT_COMPANY])
+  const [companies, setCompanies] = React.useState<CompanySettings[]>([{ company: DEFAULT_COMPANY, can_change_price: true }])
 
   React.useEffect(() => {
     fetch("/api/companies", { cache: "no-store" })
       .then(async (res) => {
-        if (!res.ok) return [DEFAULT_COMPANY]
-        const data = (await res.json()) as string[]
-        return Array.isArray(data) && data.length ? data : [DEFAULT_COMPANY]
+        if (!res.ok) return [{ company: DEFAULT_COMPANY, can_change_price: true }]
+        return normalizeCompaniesResponse(await res.json())
       })
       .then(setCompanies)
-      .catch(() => setCompanies([DEFAULT_COMPANY]))
+      .catch(() => setCompanies([{ company: DEFAULT_COMPANY, can_change_price: true }]))
   }, [])
 
   const withCompany = (href: string) => `${href}?company=${company}`
@@ -66,9 +65,9 @@ export function AppSidebar() {
               <SelectValue placeholder="Seleziona company" />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((companyName) => (
-                <SelectItem key={companyName} value={companyName}>
-                  {companyName}
+              {companies.map((companyEntry) => (
+                <SelectItem key={companyEntry.company} value={companyEntry.company}>
+                  {companyEntry.company}
                 </SelectItem>
               ))}
             </SelectContent>
