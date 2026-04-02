@@ -52,7 +52,7 @@ async function updateRecord(
     if (!res.ok) throw new Error("PATCH failed")
 }
 
-export function RecordsTable({ data }: { data: RecordRow[] }) {
+export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canChangePrice: boolean }) {
     const pageSizeOptions = [25, 50, 100]
     const searchParams = useSearchParams()
     const company = searchParams.get("company") ?? "humanray"
@@ -71,7 +71,7 @@ export function RecordsTable({ data }: { data: RecordRow[] }) {
         return Boolean(target.closest("button, a, input, select, textarea, summary, details, [role='button'], [contenteditable='true']"))
     }
 
-    const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch)), [company])
+    const columns = React.useMemo(() => getColumns((id, patch) => updateRecord(id, company, patch), canChangePrice), [canChangePrice, company])
 
     // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({

@@ -7,7 +7,7 @@ import * as React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { sidebarLinks } from "@/components/sidebar/sidebar-links"
-import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
+import { CompanySettings, DEFAULT_COMPANY, normalizeCompaniesResponse, normalizeCompany } from "@/lib/companies"
 import { cn } from "@/lib/utils"
 
 const navigationItems = sidebarLinks.flatMap((group) => group.items)
@@ -17,7 +17,7 @@ export function TopHeader() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
-  const [companies, setCompanies] = React.useState<string[]>([DEFAULT_COMPANY])
+  const [companies, setCompanies] = React.useState<CompanySettings[]>([{ company: DEFAULT_COMPANY, can_change_price: true }])
 
   React.useEffect(() => {
     let mounted = true
@@ -25,15 +25,15 @@ export function TopHeader() {
     fetch("/api/companies", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error("Unauthorized")
-        return (await res.json()) as string[]
+        return normalizeCompaniesResponse(await res.json())
       })
       .then((data) => {
-        if (!mounted || !Array.isArray(data) || data.length === 0) return
+        if (!mounted || data.length === 0) return
         setCompanies(data)
       })
       .catch(() => {
         if (!mounted) return
-        setCompanies([DEFAULT_COMPANY])
+        setCompanies([{ company: DEFAULT_COMPANY, can_change_price: true }])
       })
 
     return () => {
@@ -65,9 +65,9 @@ export function TopHeader() {
             <SelectValue placeholder="Seleziona company" />
           </SelectTrigger>
           <SelectContent>
-            {companies.map((companyName) => (
-              <SelectItem key={companyName} value={companyName}>
-                {companyName}
+            {companies.map((companyEntry) => (
+              <SelectItem key={companyEntry.company} value={companyEntry.company}>
+                {companyEntry.company}
               </SelectItem>
             ))}
           </SelectContent>

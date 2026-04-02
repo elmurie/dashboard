@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server"
+import { CompanySettings, normalizeCompaniesResponse } from "@/lib/companies"
 import { SappApiError, fetchSapp, setSessionCookies } from "@/lib/sapp-api"
 
 export async function GET() {
   try {
-    const { payload, refreshed } = await fetchSapp<string[]>("/companies/list")
-    const response = NextResponse.json(payload.data)
+    const { payload, refreshed } = await fetchSapp<CompanySettings[] | string[]>("/companies/list")
+    const companies = normalizeCompaniesResponse(payload.data)
+    const response = NextResponse.json(companies)
 
     if (refreshed) {
       await setSessionCookies(response, refreshed)
