@@ -75,7 +75,11 @@ export async function POST(req: Request) {
         days: payload.days,
       }),
     })
-    const response = NextResponse.json(apiPayload.data)
+    const response = NextResponse.json({
+      success: apiPayload.success,
+      message: apiPayload.message ?? "Close days inserted successfully",
+      data: apiPayload.data ?? null,
+    })
 
     if (refreshed) {
       await setSessionCookies(response, refreshed)
