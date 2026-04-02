@@ -10,6 +10,42 @@ type Clinic = {
   name: string
 }
 
+const MONTHS = [
+  "Gennaio",
+  "Febbraio",
+  "Marzo",
+  "Aprile",
+  "Maggio",
+  "Giugno",
+  "Luglio",
+  "Agosto",
+  "Settembre",
+  "Ottobre",
+  "Novembre",
+  "Dicembre",
+] as const
+
+function getMonthIndexFromClosureDate(dateValue: string): number | null {
+  const normalizedDate = dateValue.trim()
+
+  if (!normalizedDate) return null
+
+  const isoDate = new Date(normalizedDate)
+  if (!Number.isNaN(isoDate.getTime())) {
+    return isoDate.getMonth()
+  }
+
+  const slashMatch = normalizedDate.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/)
+  if (slashMatch) {
+    const month = Number.parseInt(slashMatch[2], 10)
+    if (month >= 1 && month <= 12) {
+      return month - 1
+    }
+  }
+
+  return null
+}
+
 export function ClinicsSelect() {
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
@@ -21,6 +57,21 @@ export function ClinicsSelect() {
   const [closures, setClosures] = React.useState<string[]>([])
   const [closuresError, setClosuresError] = React.useState<string | null>(null)
   const [isClosuresLoading, setIsClosuresLoading] = React.useState(false)
+
+  const closuresByMonth = React.useMemo(() => {
+    const groupedClosures = MONTHS.map((monthName) => ({
+      monthName,
+      closures: [] as string[],
+    }))
+
+    closures.forEach((closureDate) => {
+      const monthIndex = getMonthIndexFromClosureDate(closureDate)
+      if (monthIndex === null) return
+      groupedClosures[monthIndex].closures.push(closureDate)
+    })
+
+    return groupedClosures
+  }, [closures])
 
   React.useEffect(() => {
     let mounted = true
@@ -121,16 +172,23 @@ export function ClinicsSelect() {
         {isClosuresLoading ? <p className="text-sm text-muted-foreground">Caricamento chiusure...</p> : null}
         {closuresError ? <p className="text-sm text-red-600">{closuresError}</p> : null}
 
-        {!isClosuresLoading && !closuresError && closures.length > 0 ? (
-          <ul className="list-inside list-disc space-y-1 text-sm">
-            {closures.map((closureDate) => (
-              <li key={closureDate}>{closureDate}</li>
+        {!isClosuresLoading && !closuresError && selectedClinicId ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {closuresByMonth.map((monthData) => (
+              <article key={monthData.monthName} className="rounded-md border bg-white p-3">
+                <h3 className="text-sm font-semibold">{monthData.monthName}</h3>
+                {monthData.closures.length > 0 ? (
+                  <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+                    {monthData.closures.map((closureDate) => (
+                      <li key={`${monthData.monthName}-${closureDate}`}>{closureDate}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">Nessuna chiusura.</p>
+                )}
+              </article>
             ))}
-          </ul>
-        ) : null}
-
-        {!isClosuresLoading && !closuresError && selectedClinicId && closures.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nessuna chiusura disponibile per la sede selezionata.</p>
+          </div>
         ) : null}
       </div>
 
