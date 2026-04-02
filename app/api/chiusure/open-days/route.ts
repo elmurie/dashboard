@@ -1,49 +1,17 @@
 import { NextResponse } from "next/server"
 import { SappApiError, fetchSapp, setSessionCookies } from "@/lib/sapp-api"
 
-type CloseDaysPayload = {
+type OpenDaysPayload = {
   company?: string
   clinic_id?: string
   days?: Array<{ from?: string; to?: string }>
 }
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const company = searchParams.get("company")
-  const clinicId = searchParams.get("clinic_id")
-
-  if (!company) {
-    return NextResponse.json({ error: "Missing company" }, { status: 400 })
-  }
-
-  if (!clinicId) {
-    return NextResponse.json({ error: "Missing clinic_id" }, { status: 400 })
-  }
-
-  try {
-    const path = `/chiusure/list?company=${encodeURIComponent(company)}&clinic_id=${encodeURIComponent(clinicId)}`
-    const { payload, refreshed } = await fetchSapp<string[]>(path)
-    const response = NextResponse.json(payload.data)
-
-    if (refreshed) {
-      await setSessionCookies(response, refreshed)
-    }
-
-    return response
-  } catch (error) {
-    if (error instanceof SappApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status })
-    }
-
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
 export async function POST(req: Request) {
-  let payload: CloseDaysPayload
+  let payload: OpenDaysPayload
 
   try {
-    payload = (await req.json()) as CloseDaysPayload
+    payload = (await req.json()) as OpenDaysPayload
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -66,7 +34,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { payload: apiPayload, refreshed } = await fetchSapp<unknown>("/chiusure/close-days", {
+    const { payload: apiPayload, refreshed } = await fetchSapp<unknown>("/chiusure/open-days", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -75,9 +43,10 @@ export async function POST(req: Request) {
         days: payload.days,
       }),
     })
+
     const response = NextResponse.json({
       success: apiPayload.success,
-      message: apiPayload.message ?? "Close days inserted successfully",
+      message: apiPayload.message ?? "Open days inserted successfully",
       data: apiPayload.data ?? null,
     })
 
