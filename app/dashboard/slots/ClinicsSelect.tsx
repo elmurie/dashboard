@@ -122,6 +122,7 @@ export function ClinicsSelect() {
   const [selectedDateKeysToOpen, setSelectedDateKeysToOpen] = React.useState<Set<string>>(new Set())
   const [saveError, setSaveError] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
+  const todayDateKey = formatDateKey(new Date())
 
   const closureDateKeys = React.useMemo(() => {
     const keys = new Set<string>()
@@ -410,6 +411,7 @@ export function ClinicsSelect() {
                         const date = new Date(selectedYear, monthIndex, day)
                         const isValidDate = date.getMonth() === monthIndex
                         const dateKey = formatDateKey(date)
+                        const isPastDate = isValidDate && dateKey < todayDateKey
                         const isClosed = closureDateKeys.has(dateKey)
                         const isSelectedToClose = selectedDateKeysToClose.has(dateKey)
                         const isSelectedToOpen = selectedDateKeysToOpen.has(dateKey)
@@ -421,15 +423,16 @@ export function ClinicsSelect() {
                               className={[
                                 "h-10 w-full text-sm transition-colors",
                                 isValidDate ? "cursor-pointer hover:bg-slate-100" : "cursor-not-allowed bg-slate-100 text-slate-300",
-                                isClosed ? "bg-red-500 text-white hover:bg-red-600" : "",
+                                isPastDate ? "cursor-not-allowed bg-slate-300 text-slate-600 hover:bg-slate-300" : "",
+                                !isPastDate && isClosed ? "bg-red-500 text-white hover:bg-red-600" : "",
                                 isSelectedToClose ? "ring-2 ring-inset ring-black" : "",
                                 isSelectedToOpen ? "ring-2 ring-inset ring-emerald-700" : "",
                               ].join(" ")}
                               onClick={() => {
-                                if (!isValidDate) return
+                                if (!isValidDate || isPastDate) return
                                 toggleDateSelection(dateKey, isClosed)
                               }}
-                              disabled={!isValidDate}
+                              disabled={!isValidDate || isPastDate}
                             >
                               {isValidDate ? day : ""}
                             </button>
