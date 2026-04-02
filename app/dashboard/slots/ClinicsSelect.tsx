@@ -118,7 +118,8 @@ export function ClinicsSelect() {
   const [isClosuresLoading, setIsClosuresLoading] = React.useState(false)
   const [closuresRefreshKey, setClosuresRefreshKey] = React.useState(0)
   const [selectedYear, setSelectedYear] = React.useState<number>(new Date().getFullYear())
-  const [selectedDateKeys, setSelectedDateKeys] = React.useState<Set<string>>(new Set())
+  const [selectedDateKeysToClose, setSelectedDateKeysToClose] = React.useState<Set<string>>(new Set())
+  const [selectedDateKeysToOpen, setSelectedDateKeysToOpen] = React.useState<Set<string>>(new Set())
   const [saveError, setSaveError] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
 
@@ -193,7 +194,8 @@ export function ClinicsSelect() {
       setClosures([])
       setClosuresError(null)
       setIsClosuresLoading(false)
-      setSelectedDateKeys(new Set())
+      setSelectedDateKeysToClose(new Set())
+      setSelectedDateKeysToOpen(new Set())
       setSaveError(null)
       return
     }
@@ -232,8 +234,27 @@ export function ClinicsSelect() {
     }
   }, [company, selectedClinicId, closuresRefreshKey])
 
-  const toggleDateSelection = (dateKey: string) => {
-    setSelectedDateKeys((previous) => {
+  const toggleDateSelection = (dateKey: string, isCurrentlyClosed: boolean) => {
+    if (isCurrentlyClosed) {
+      setSelectedDateKeysToOpen((previous) => {
+        const next = new Set(previous)
+        if (next.has(dateKey)) {
+          next.delete(dateKey)
+        } else {
+          next.add(dateKey)
+        }
+        return next
+      })
+      setSelectedDateKeysToClose((previous) => {
+        if (!previous.has(dateKey)) return previous
+        const next = new Set(previous)
+        next.delete(dateKey)
+        return next
+      })
+      return
+    }
+
+    setSelectedDateKeysToClose((previous) => {
       const next = new Set(previous)
       if (next.has(dateKey)) {
         next.delete(dateKey)
@@ -242,31 +263,57 @@ export function ClinicsSelect() {
       }
       return next
     })
+    setSelectedDateKeysToOpen((previous) => {
+      if (!previous.has(dateKey)) return previous
+      const next = new Set(previous)
+      next.delete(dateKey)
+      return next
+    })
   }
 
   const saveSelectedDays = async () => {
-    if (!selectedClinicId || selectedDateKeys.size === 0) return
+    if (!selectedClinicId || (selectedDateKeysToClose.size === 0 && selectedDateKeysToOpen.size === 0)) return
 
     setIsSaving(true)
     setSaveError(null)
 
     try {
-      const response = await fetch("/api/chiusure", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company,
-          clinic_id: selectedClinicId,
-          days: compressDateKeysToRanges(Array.from(selectedDateKeys)),
-        }),
-      })
+      if (selectedDateKeysToOpen.size > 0) {
+        const openDaysResponse = await fetch("/api/chiusure/open-days", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company,
+            clinic_id: selectedClinicId,
+            days: compressDateKeysToRanges(Array.from(selectedDateKeysToOpen)),
+          }),
+        })
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(payload?.error ?? "Impossibile salvare le chiusure")
+        if (!openDaysResponse.ok) {
+          const payload = (await openDaysResponse.json().catch(() => null)) as { error?: string } | null
+          throw new Error(payload?.error ?? "Impossibile aprire i giorni selezionati")
+        }
       }
 
-      setSelectedDateKeys(new Set())
+      if (selectedDateKeysToClose.size > 0) {
+        const closeDaysResponse = await fetch("/api/chiusure", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company,
+            clinic_id: selectedClinicId,
+            days: compressDateKeysToRanges(Array.from(selectedDateKeysToClose)),
+          }),
+        })
+
+        if (!closeDaysResponse.ok) {
+          const payload = (await closeDaysResponse.json().catch(() => null)) as { error?: string } | null
+          throw new Error(payload?.error ?? "Impossibile salvare le chiusure")
+        }
+      }
+
+      setSelectedDateKeysToClose(new Set())
+      setSelectedDateKeysToOpen(new Set())
       setClosuresRefreshKey((value) => value + 1)
     } catch (saveSelectedDaysError: unknown) {
       setSaveError(saveSelectedDaysError instanceof Error ? saveSelectedDaysError.message : "Impossibile salvare le chiusure")
@@ -322,8 +369,13 @@ export function ClinicsSelect() {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">Selezionati: {selectedDateKeys.size}</p>
-                <Button onClick={saveSelectedDays} disabled={selectedDateKeys.size === 0 || isSaving}>
+                <p className="text-sm text-muted-foreground">
+                  Da chiudere: {selectedDateKeysToClose.size} • Da aprire: {selectedDateKeysToOpen.size}
+                </p>
+                <Button
+                  onClick={saveSelectedDays}
+                  disabled={(selectedDateKeysToClose.size === 0 && selectedDateKeysToOpen.size === 0) || isSaving}
+                >
                   {isSaving ? "Salvataggio..." : "Salva giorni selezionati"}
                 </Button>
               </div>
@@ -359,7 +411,8 @@ export function ClinicsSelect() {
                         const isValidDate = date.getMonth() === monthIndex
                         const dateKey = formatDateKey(date)
                         const isClosed = closureDateKeys.has(dateKey)
-                        const isSelected = selectedDateKeys.has(dateKey)
+                        const isSelectedToClose = selectedDateKeysToClose.has(dateKey)
+                        const isSelectedToOpen = selectedDateKeysToOpen.has(dateKey)
 
                         return (
                           <td key={`${monthName}-${day}`} className="border-l border-slate-100 p-0">
@@ -369,11 +422,12 @@ export function ClinicsSelect() {
                                 "h-10 w-full text-sm transition-colors",
                                 isValidDate ? "cursor-pointer hover:bg-slate-100" : "cursor-not-allowed bg-slate-100 text-slate-300",
                                 isClosed ? "bg-red-500 text-white hover:bg-red-600" : "",
-                                isSelected ? "ring-2 ring-inset ring-black" : "",
+                                isSelectedToClose ? "ring-2 ring-inset ring-black" : "",
+                                isSelectedToOpen ? "ring-2 ring-inset ring-emerald-700" : "",
                               ].join(" ")}
                               onClick={() => {
                                 if (!isValidDate) return
-                                toggleDateSelection(dateKey)
+                                toggleDateSelection(dateKey, isClosed)
                               }}
                               disabled={!isValidDate}
                             >
