@@ -21,7 +21,7 @@ export const sidebarLinks = [
             },
             {
                 title: "Chiusure",
-                href: "/dashboard/slots",
+                href: "/dashboard/closures",
                 icon: Calendar,
             },
         ],
