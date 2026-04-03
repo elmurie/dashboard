@@ -428,7 +428,9 @@ export function ClinicsSelect() {
               <table className="w-full min-w-[1200px] border-collapse text-center">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="sticky left-0 z-10 border-r bg-muted/50 px-3 py-2 text-left text-sm font-semibold">Mese</th>
+                    <th className="sticky left-0 z-10 w-20 border-r bg-muted/50 px-2 py-2 text-left text-xs font-semibold sm:w-32 sm:px-3 sm:text-sm">
+                      Mese
+                    </th>
                     {Array.from({ length: MAX_DAYS_IN_MONTH }, (_, index) => (
                       <th key={index + 1} className="w-9 px-1 py-2 text-xs font-medium text-muted-foreground">
                         {index + 1}
@@ -436,7 +438,9 @@ export function ClinicsSelect() {
                     ))}
                   </tr>
                   <tr className="border-b bg-muted/30">
-                    <th className="sticky left-0 z-10 border-r bg-muted/30 px-3 py-2 text-left text-xs text-muted-foreground">Giorno</th>
+                    <th className="sticky left-0 z-10 w-20 border-r bg-muted/30 px-2 py-2 text-left text-[11px] text-muted-foreground sm:w-32 sm:px-3 sm:text-xs">
+                      Giorno
+                    </th>
                     {Array.from({ length: MAX_DAYS_IN_MONTH }, (_, index) => (
                       <th key={`weekday-${index + 1}`} className="px-1 py-1 text-[11px] font-medium text-muted-foreground">
                         {ITALIAN_WEEKDAYS[new Date(selectedYear, 0, index + 1).getDay()]}
@@ -447,7 +451,10 @@ export function ClinicsSelect() {
                 <tbody>
                   {MONTHS.map((monthName, monthIndex) => (
                     <tr key={monthName} className="border-b last:border-b-0">
-                      <th className="sticky left-0 z-10 border-r bg-white px-3 py-2 text-left text-base font-semibold">{monthName}</th>
+                      <th className="sticky left-0 z-10 w-20 border-r bg-white px-2 py-2 text-left text-xs font-semibold sm:w-32 sm:px-3 sm:text-base">
+                        <span className="sm:hidden">{monthName.slice(0, 3)}</span>
+                        <span className="hidden sm:inline">{monthName}</span>
+                      </th>
                       {Array.from({ length: MAX_DAYS_IN_MONTH }, (_, dayIndex) => {
                         const day = dayIndex + 1
                         const date = new Date(selectedYear, monthIndex, day)
