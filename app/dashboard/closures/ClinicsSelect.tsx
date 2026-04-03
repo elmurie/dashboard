@@ -326,62 +326,62 @@ export function ClinicsSelect() {
   return (
     <section className="space-y-4">
       <div className="space-y-2">
-        <div className="text-sm font-medium">Sede</div>
-        <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
-          <SelectTrigger className="w-full max-w-md bg-white">
-            <SelectValue placeholder="Seleziona una sede" />
-          </SelectTrigger>
-          <SelectContent>
-            {clinics.map((clinic) => (
-              <SelectItem key={clinic._id} value={clinic._id}>
-                {clinic.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full overflow-x-auto">
+          <div className="flex min-w-max items-center gap-3">
+            <div className="w-72">
+              <p className="sr-only">Sede</p>
+              <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Seleziona una sede" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clinics.map((clinic) => (
+                    <SelectItem key={clinic._id} value={clinic._id}>
+                      {clinic.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedYear(availableYears[Math.max(0, selectedYearIndex - 1)])}
+                disabled={selectedYearIndex === 0 || !selectedClinicId}
+              >
+                « Indietro
+              </Button>
+              <div className="min-w-16 text-center text-3xl font-semibold">{selectedYear}</div>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedYear(availableYears[Math.min(availableYears.length - 1, selectedYearIndex + 1)])}
+                disabled={selectedYearIndex === availableYears.length - 1 || !selectedClinicId}
+              >
+                Avanti »
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Da chiudere: {selectedDateKeysToClose.size} • Da aprire: {selectedDateKeysToOpen.size}
+              </p>
+              <Button
+                onClick={saveSelectedDays}
+                disabled={(selectedDateKeysToClose.size === 0 && selectedDateKeysToOpen.size === 0) || isSaving}
+              >
+                {isSaving ? "Salvataggio..." : "Salva giorni selezionati"}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {clinicsError ? <p className="text-sm text-red-600">{clinicsError}</p> : null}
         {!clinicsError && clinics.length === 0 ? <p className="text-sm text-muted-foreground">Nessuna sede disponibile.</p> : null}
-      </div>
-
-      <div className="space-y-2">
-        <div className="text-sm font-medium">Chiusure</div>
         {isClosuresLoading ? <p className="text-sm text-muted-foreground">Caricamento chiusure...</p> : null}
         {closuresError ? <p className="text-sm text-red-600">{closuresError}</p> : null}
         {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}
 
         {!isClosuresLoading && !closuresError && selectedClinicId ? (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedYear(availableYears[Math.max(0, selectedYearIndex - 1)])}
-                  disabled={selectedYearIndex === 0}
-                >
-                  « Indietro
-                </Button>
-                <div className="text-3xl font-semibold">{selectedYear}</div>
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedYear(availableYears[Math.min(availableYears.length - 1, selectedYearIndex + 1)])}
-                  disabled={selectedYearIndex === availableYears.length - 1}
-                >
-                  Avanti »
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">
-                  Da chiudere: {selectedDateKeysToClose.size} • Da aprire: {selectedDateKeysToOpen.size}
-                </p>
-                <Button
-                  onClick={saveSelectedDays}
-                  disabled={(selectedDateKeysToClose.size === 0 && selectedDateKeysToOpen.size === 0) || isSaving}
-                >
-                  {isSaving ? "Salvataggio..." : "Salva giorni selezionati"}
-                </Button>
-              </div>
-            </div>
-
             <div className="w-full overflow-x-auto rounded-md border bg-white">
               <table className="w-full min-w-[1200px] border-collapse text-center">
                 <thead>
