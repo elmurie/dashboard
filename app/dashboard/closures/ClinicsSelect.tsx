@@ -368,7 +368,7 @@ export function ClinicsSelect() {
     <section className="space-y-4">
       <div className="space-y-2">
         <div className="w-full overflow-x-auto">
-          <div className="flex min-w-max items-center gap-3">
+          <div className="flex min-w-max h-10 items-center gap-3">
             <div className="w-72">
               <p className="sr-only">Sede</p>
               <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
