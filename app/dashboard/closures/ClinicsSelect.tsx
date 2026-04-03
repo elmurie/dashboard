@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DEFAULT_COMPANY, normalizeCompany } from "@/lib/companies"
@@ -28,6 +28,7 @@ const MONTHS = [
 
 const MAX_DAYS_IN_MONTH = 31
 const ITALIAN_WEEKDAYS = ["D", "L", "M", "M", "G", "V", "S"] as const
+const LOGIN_REDIRECT_DELAY_MS = 5000
 
 function parseClosureDate(dateValue: string): Date | null {
   const normalizedDate = dateValue.trim()
@@ -106,6 +107,7 @@ function compressDateKeysToRanges(dateKeys: string[]) {
 }
 
 export function ClinicsSelect() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const company = normalizeCompany(searchParams.get("company"))
 
@@ -121,6 +123,7 @@ export function ClinicsSelect() {
   const [selectedDateKeysToClose, setSelectedDateKeysToClose] = React.useState<Set<string>>(new Set())
   const [selectedDateKeysToOpen, setSelectedDateKeysToOpen] = React.useState<Set<string>>(new Set())
   const [saveError, setSaveError] = React.useState<string | null>(null)
+  const [authError, setAuthError] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
   const todayDateKey = formatDateKey(new Date())
 
@@ -162,6 +165,10 @@ export function ClinicsSelect() {
 
     fetch(`/api/clinics?company=${encodeURIComponent(company)}`, { cache: "no-store" })
       .then(async (res) => {
+        if (res.status === 401) {
+          throw new Error("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+        }
+
         if (!res.ok) {
           const payload = (await res.json().catch(() => null)) as { error?: string } | null
           throw new Error(payload?.error ?? "Impossibile caricare le sedi")
@@ -179,10 +186,14 @@ export function ClinicsSelect() {
       })
       .catch((fetchError: unknown) => {
         if (!mounted) return
+        const errorMessage = fetchError instanceof Error ? fetchError.message : "Impossibile caricare le sedi"
+        if (errorMessage.includes("Sessione scaduta") || errorMessage.includes("token non valido")) {
+          setAuthError("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+        }
         setClinics([])
         setSelectedClinicId("")
         setClosures([])
-        setClinicsError(fetchError instanceof Error ? fetchError.message : "Impossibile caricare le sedi")
+        setClinicsError(errorMessage)
       })
 
     return () => {
@@ -206,6 +217,10 @@ export function ClinicsSelect() {
 
     fetch(`/api/chiusure?company=${encodeURIComponent(company)}&clinic_id=${encodeURIComponent(selectedClinicId)}`, { cache: "no-store" })
       .then(async (res) => {
+        if (res.status === 401) {
+          throw new Error("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+        }
+
         if (!res.ok) {
           const payload = (await res.json().catch(() => null)) as { error?: string } | null
           throw new Error(payload?.error ?? "Impossibile caricare le chiusure")
@@ -222,8 +237,12 @@ export function ClinicsSelect() {
       })
       .catch((fetchError: unknown) => {
         if (!mounted) return
+        const errorMessage = fetchError instanceof Error ? fetchError.message : "Impossibile caricare le chiusure"
+        if (errorMessage.includes("Sessione scaduta") || errorMessage.includes("token non valido")) {
+          setAuthError("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+        }
         setClosures([])
-        setClosuresError(fetchError instanceof Error ? fetchError.message : "Impossibile caricare le chiusure")
+        setClosuresError(errorMessage)
       })
       .finally(() => {
         if (!mounted) return
@@ -291,6 +310,11 @@ export function ClinicsSelect() {
         })
 
         if (!openDaysResponse.ok) {
+          if (openDaysResponse.status === 401) {
+            setAuthError("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+            return
+          }
+
           const payload = (await openDaysResponse.json().catch(() => null)) as { error?: string } | null
           throw new Error(payload?.error ?? "Impossibile aprire i giorni selezionati")
         }
@@ -308,6 +332,11 @@ export function ClinicsSelect() {
         })
 
         if (!closeDaysResponse.ok) {
+          if (closeDaysResponse.status === 401) {
+            setAuthError("Sessione scaduta o token non valido. Reindirizzamento al login tra 5 secondi...")
+            return
+          }
+
           const payload = (await closeDaysResponse.json().catch(() => null)) as { error?: string } | null
           throw new Error(payload?.error ?? "Impossibile salvare le chiusure")
         }
@@ -322,6 +351,18 @@ export function ClinicsSelect() {
       setIsSaving(false)
     }
   }
+
+  React.useEffect(() => {
+    if (!authError) return
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace("/auth/login")
+    }, LOGIN_REDIRECT_DELAY_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [authError, router])
 
   return (
     <section className="space-y-4">
@@ -375,6 +416,7 @@ export function ClinicsSelect() {
         </div>
 
         {clinicsError ? <p className="text-sm text-red-600">{clinicsError}</p> : null}
+        {authError ? <p className="text-sm text-red-600">{authError}</p> : null}
         {!clinicsError && clinics.length === 0 ? <p className="text-sm text-muted-foreground">Nessuna sede disponibile.</p> : null}
         {isClosuresLoading ? <p className="text-sm text-muted-foreground">Caricamento chiusure...</p> : null}
         {closuresError ? <p className="text-sm text-red-600">{closuresError}</p> : null}
