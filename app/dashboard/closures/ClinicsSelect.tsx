@@ -27,7 +27,6 @@ const MONTHS = [
 ] as const
 
 const MAX_DAYS_IN_MONTH = 31
-const ITALIAN_WEEKDAYS = ["D", "L", "M", "M", "G", "V", "S"] as const
 const LOGIN_REDIRECT_DELAY_MS = 5000
 
 function parseClosureDate(dateValue: string): Date | null {
@@ -409,7 +408,7 @@ export function ClinicsSelect() {
                 onClick={saveSelectedDays}
                 disabled={(selectedDateKeysToClose.size === 0 && selectedDateKeysToOpen.size === 0) || isSaving}
               >
-                {isSaving ? "Salvataggio..." : "Salva giorni selezionati"}
+                {isSaving ? "Salvataggio..." : "Modifica giorni selezionati"}
               </Button>
             </div>
           </div>
@@ -434,16 +433,6 @@ export function ClinicsSelect() {
                     {Array.from({ length: MAX_DAYS_IN_MONTH }, (_, index) => (
                       <th key={index + 1} className="w-9 px-1 py-2 text-xs font-medium text-muted-foreground">
                         {index + 1}
-                      </th>
-                    ))}
-                  </tr>
-                  <tr className="border-b bg-muted/30">
-                    <th className="sticky left-0 z-10 w-20 border-r bg-muted/30 px-2 py-2 text-left text-[11px] text-muted-foreground sm:w-32 sm:px-3 sm:text-xs">
-                      Giorno
-                    </th>
-                    {Array.from({ length: MAX_DAYS_IN_MONTH }, (_, index) => (
-                      <th key={`weekday-${index + 1}`} className="px-1 py-1 text-[11px] font-medium text-muted-foreground">
-                        {ITALIAN_WEEKDAYS[new Date(selectedYear, 0, index + 1).getDay()]}
                       </th>
                     ))}
                   </tr>
@@ -474,13 +463,13 @@ export function ClinicsSelect() {
                               className={[
                                 "h-10 w-full text-sm transition-colors",
                                 isValidDate ? "cursor-pointer hover:bg-slate-100" : "cursor-not-allowed bg-slate-100 text-slate-300",
-                                isWeekend && !isPastDate && !isClosed ? "bg-yellow-100 text-slate-900 hover:bg-yellow-200" : "",
+                                isWeekend && !isPastDate && !isClosed ? "bg-gray-300 text-slate-500 hover:bg-yellow-200 hover:text-slate-500" : "",
                                 isPastDate
                                   ? isWeekend && !isClosed
-                                    ? "cursor-not-allowed bg-yellow-200 text-slate-700 hover:bg-yellow-200"
-                                    : "cursor-not-allowed bg-slate-300 text-slate-600 hover:bg-slate-300"
+                                    ? "cursor-not-allowed bg-gray-300 text-slate-700 hover:bg-yellow-200"
+                                    : "cursor-not-allowed bg-gray-200 text-slate-600 hover:bg-gray-200"
                                   : "",
-                                !isPastDate && isClosed ? "bg-red-500 text-white hover:bg-red-600" : "",
+                                !isPastDate && isClosed ? "bg-red-500 text-white hover:bg-red-600 hover:text-slate-500" : "",
                                 isSelectedToClose ? "ring-2 ring-inset ring-black" : "",
                                 isSelectedToOpen ? "ring-2 ring-inset ring-emerald-700" : "",
                               ].join(" ")}

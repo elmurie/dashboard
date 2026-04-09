@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cupsolidale Tool",
+  title: "Strutture | Cup24.it",
   description: "Gestisci prezzi ed agende",
 };
 
