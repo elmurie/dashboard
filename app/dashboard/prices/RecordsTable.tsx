@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Funnel } from "lucide-react"
 import { RecordRow, getColumns } from "./columns"
+import { API_BASE_URL } from "@/lib/sapp-api-config"
 
 async function updateRecord(
     id: string,
@@ -40,7 +41,7 @@ async function updateRecord(
     const price = patch.prezzo
     if (typeof price !== "number") throw new Error("Invalid price")
 
-    const res = await fetch("https://sandboxapi.cupsolidale.it/api/v1/sapp/prices/change", {
+    const res = await fetch(`${API_BASE_URL}/prices/change`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${accessToken}`,
