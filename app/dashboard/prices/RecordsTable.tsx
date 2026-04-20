@@ -237,10 +237,12 @@ export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canC
     }
 
     function renderColumnFilter(column: Column<RecordRow, unknown>) {
-        const uniqueValues = Array.from(column.getFacetedUniqueValues().keys())
-        if (!uniqueValues.length) return null
-
         const filterLabel = typeof column.columnDef.header === "string" ? column.columnDef.header : column.id
+        if (!column.getCanFilter()) return <span className="px-2 py-1 text-xs">{filterLabel}</span>
+
+        const uniqueValues = Array.from(column.getFacetedUniqueValues().keys())
+        if (!uniqueValues.length) return <span className="px-2 py-1 text-xs">{filterLabel}</span>
+
         const selected = ((column.getFilterValue() as unknown[] | undefined) ?? [])
         const searchValue = filterSearch[column.id] ?? ""
         const normalizedSearch = searchValue.trim().toLowerCase()
