@@ -4,13 +4,6 @@ import * as React from "react"
 import { ColumnDef, FilterFn } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -137,6 +130,7 @@ export function getColumns(updateRecord: UpdateFn, canChangePrice: boolean): Rec
         {
             accessorKey: "prezzo",
             header: "Prezzo",
+            enableColumnFilter: false,
             cell: ({ row }) => {
                 const r = row.original
 
@@ -153,7 +147,6 @@ export function getColumns(updateRecord: UpdateFn, canChangePrice: boolean): Rec
                     />
                 )
             },
-            // filterFn: multiSelectFilter,
             meta: { widthClassName: "w-8 min-w-8 max-w-8" },
         },
         {
@@ -162,72 +155,23 @@ export function getColumns(updateRecord: UpdateFn, canChangePrice: boolean): Rec
             cell: ({ row }) => {
                 const r = row.original
 
-                return <EditableInVenditaCell
-                    initialValue={r.in_vendita}
-                    onCommit={async (next) => {
-                        if (next === r.in_vendita) return
-                        await updateRecord(r._id, { in_vendita: next })
-                    }}
-                />
+                return (
+                    <span
+                        className={cn(
+                            "inline-flex h-7 min-w-[54px] items-center justify-center rounded-md border px-2 text-[12px] font-medium",
+                            r.in_vendita === "SI"
+                                ? "border-[var(--accent-bg)] bg-[var(--accent-bg)]/10"
+                                : "border-gray-500 bg-gray-100"
+                        )}
+                    >
+                        {r.in_vendita}
+                    </span>
+                )
             },
             filterFn: multiSelectFilter,
             meta: { widthClassName: "w-10 min-w-10 max-w-10" },
         },
     ]
-}
-
-function EditableInVenditaCell({
-    initialValue,
-    onCommit,
-}: {
-    initialValue: "SI" | "NO"
-    onCommit: (next: "SI" | "NO") => Promise<void>
-}) {
-    const [value, setValue] = React.useState<"SI" | "NO">(initialValue)
-    const [saving, setSaving] = React.useState(false)
-
-    React.useEffect(() => {
-        setValue(initialValue)
-    }, [initialValue])
-
-    async function commit(next: "SI" | "NO") {
-        if (next === initialValue) return
-        try {
-            setSaving(true)
-            setValue(next) // UI immediata
-            await onCommit(next)
-        } catch {
-            // rollback
-            setValue(initialValue)
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    return (
-        <Select
-            value={value}
-            onValueChange={(v) => commit(v as "SI" | "NO")}
-            disabled={saving}
-        >
-            <SelectTrigger
-                size="sm"
-                className={cn(
-                    "h-7 w-[80px] border-2 px-2 text-[12px] disabled:cursor-not-allowed disabled:bg-black",
-                    {
-                        "bg-gray-100 border-gray-500": value === "NO",
-                        "border-[var(--accent-bg)]": value === "SI",
-                    }
-                )}
-            >
-                <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="SI">SI</SelectItem>
-                <SelectItem value="NO">NO</SelectItem>
-            </SelectContent>
-        </Select>
-    )
 }
 
 function EditablePriceCell({
