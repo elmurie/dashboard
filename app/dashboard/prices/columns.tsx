@@ -29,7 +29,7 @@ export type RecordRow = {
     id_medico: string
     id_prestazione: string
     what_id: string
-    in_vendita: "SI" | "NO"
+    online: "SI" | "NO"
     sede: string
     medico: string
     nome_prestazione_cup: string
@@ -40,7 +40,7 @@ export type RecordRow = {
     prezzo_max: number
 }
 
-type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>) => Promise<void>
+type UpdateFn = (_id: string, patch: Partial<Pick<RecordRow, "prezzo" | "online">>) => Promise<void>
 const PRICE_DEVIATION_PERCENT_THRESHOLD_MEDIUM = 10
 const PRICE_DEVIATION_PERCENT_THRESHOLD_SEVERE = 50
 
@@ -150,21 +150,14 @@ export function getColumns(updateRecord: UpdateFn, canChangePrice: boolean): Rec
             meta: { widthClassName: "w-8 min-w-8 max-w-8" },
         },
         {
-            accessorKey: "in_vendita",
+            accessorKey: "online",
             header: "In vendita",
             cell: ({ row }) => {
                 const r = row.original
 
                 return (
-                    <span
-                        className={cn(
-                            "inline-flex h-7 min-w-[54px] items-center justify-center rounded-md border px-2 text-[12px] font-medium",
-                            r.in_vendita === "SI"
-                                ? "border-[var(--accent-bg)] bg-[var(--accent-bg)]/10"
-                                : "border-gray-500 bg-gray-100"
-                        )}
-                    >
-                        {r.in_vendita}
+                    <span>
+                        {r.online ? 'SI' : 'NO'}
                     </span>
                 )
             },

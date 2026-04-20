@@ -27,7 +27,7 @@ import { API_BASE_URL } from "@/lib/sapp-api-config"
 async function updateRecord(
     id: string,
     company: string,
-    patch: Partial<Pick<RecordRow, "prezzo" | "in_vendita">>
+    patch: Partial<Pick<RecordRow, "prezzo" | "online">>
 ) {
     const tokenResponse = await fetch("/api/auth/access-token", {
         method: "GET",
