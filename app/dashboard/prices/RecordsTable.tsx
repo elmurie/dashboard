@@ -238,8 +238,8 @@ export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canC
 
     function formatFilterValueLabel(columnId: string, value: unknown): string {
         if (columnId === "online") {
-            if (value === true || value === "SI") return "sì"
-            if (value === false || value === "NO") return "no"
+            if (value === true || value === "Sì") return "Sì"
+            if (value === false || value === "No") return "No"
         }
 
         return String(value)
