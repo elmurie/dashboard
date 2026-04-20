@@ -236,6 +236,15 @@ export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canC
         column.setFilterValue(next.length ? next : undefined)
     }
 
+    function formatFilterValueLabel(columnId: string, value: unknown): string {
+        if (columnId === "online") {
+            if (value === true || value === "SI") return "sì"
+            if (value === false || value === "NO") return "no"
+        }
+
+        return String(value)
+    }
+
     function renderColumnFilter(column: Column<RecordRow, unknown>) {
         const filterLabel = typeof column.columnDef.header === "string" ? column.columnDef.header : column.id
         if (!column.getCanFilter()) return <span className="px-2 py-1 text-xs">{filterLabel}</span>
@@ -304,6 +313,7 @@ export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canC
                     <div className="max-h-56 space-y-1 overflow-auto pr-1">
                         {filteredValues.map((value, idx) => {
                                 const checked = selected.some((item) => item === value)
+                                const valueLabel = formatFilterValueLabel(column.id, value)
 
                                 return (
                                     <button
@@ -319,7 +329,7 @@ export function RecordsTable({ data, canChangePrice }: { data: RecordRow[]; canC
                                             tabIndex={-1}
                                             aria-hidden="true"
                                         />
-                                        <span className="truncate">{String(value)}</span>
+                                        <span className="truncate">{valueLabel}</span>
                                     </button>
                                 )
                             })}
