@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { DEFAULT_COMPANY, normalizeCompaniesResponse } from "@/lib/companies"
 
 const LOGIN_REDIRECT_DELAY_MS = 5000
 
@@ -26,7 +27,15 @@ export default function AuthCallbackPage() {
           throw new Error(payload.message ?? "Token non valido o scaduto")
         }
 
-        router.replace("/dashboard")
+        const companiesResponse = await fetch("/api/companies", { cache: "no-store" })
+        let company = DEFAULT_COMPANY
+
+        if (companiesResponse.ok) {
+          const companies = normalizeCompaniesResponse(await companiesResponse.json())
+          company = companies[0]?.company ?? DEFAULT_COMPANY
+        }
+
+        window.location.replace(`/dashboard?company=${encodeURIComponent(company)}`)
       })
       .catch((reason: Error) => {
         setError(`${reason.message}. Verrai reindirizzato al login tra 5 secondi...`)
